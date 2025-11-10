@@ -1,0 +1,15 @@
+/vendor/
+/vendor-bin/
+/.env
+/.env.local
+/swagger/openapi.json
+/composer.lock
+/node_modules/
+/coverage/
+/.phpunit.result.cache
+/.idea/
+/.vscode/
+/.DS_Store
+/storage/logs/
+/storage/cache/
+
