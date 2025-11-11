@@ -16,7 +16,7 @@ class Database
         }
 
         $host = $this->env('DB_HOST', 'localhost');
-        $port = $this->env('DB_PORT', '5432');
+        $port = $this->env('DB_PORT', '5433');
         $database = $this->env('DB_DATABASE');
         $username = $this->env('DB_USERNAME');
         $password = $this->env('DB_PASSWORD');
