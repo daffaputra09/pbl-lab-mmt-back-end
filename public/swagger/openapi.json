@@ -29,6 +29,210 @@
                 }
             }
         },
+        "/event": {
+            "get": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "List semua event",
+                "operationId": "eabd6f0213afeba2dce5e31077d0a512",
+                "responses": {
+                    "200": {
+                        "description": "Daftar event",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Event"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Buat event baru",
+                "operationId": "716b296d4070d33bb86df00ac32bf39d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Event berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Judul wajib diisi"
+                    },
+                    "409": {
+                        "description": "Event dengan judul tersebut sudah ada"
+                    },
+                    "500": {
+                        "description": "Gagal membuat event"
+                    }
+                }
+            }
+        },
+        "/event/{id}": {
+            "get": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Detail event",
+                "operationId": "9143515ba5bc2e4a39e15ac31150729a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail event",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Event tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Perbarui event",
+                "operationId": "ec3b3569cae7526bd9a4ba3645a6de19",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Event tidak ditemukan"
+                    },
+                    "422": {
+                        "description": "Judul wajib diisi"
+                    },
+                    "409": {
+                        "description": "Event dengan judul tersebut sudah ada"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Hapus event",
+                "operationId": "da84b168882132238cdab86b625094a4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Event berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Event tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/event/recent/{limit}": {
+            "get": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Daftar event terbaru",
+                "operationId": "548a53168d271b7873cbf1420f2b1da1",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "path",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar event terbaru",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Event"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/kategori": {
             "get": {
                 "tags": [
@@ -346,6 +550,70 @@
     },
     "components": {
         "schemas": {
+            "Event": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "judul": {
+                        "type": "string",
+                        "example": "Workshop PHP"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi lengkap event",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://example.com/image.jpg",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "EventCreateRequest": {
+                "required": [
+                    "judul"
+                ],
+                "properties": {
+                    "judul": {
+                        "type": "string",
+                        "example": "Webinar Terbaru"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pembahasan mendalam tentang framework baru",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://example.com/webinar.jpg",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "EventUpdateRequest": {
+                "properties": {
+                    "judul": {
+                        "type": "string",
+                        "example": "Webinar Terbaru 2024"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pembahasan mendalam dan update terkini",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://example.com/webinar-updated.jpg",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Kategori": {
                 "required": [
                     "id",
@@ -436,6 +704,10 @@
         {
             "name": "Documentation",
             "description": "Documentation"
+        },
+        {
+            "name": "Event",
+            "description": "Event"
         }
     ]
 }
