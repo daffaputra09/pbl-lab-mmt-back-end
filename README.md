@@ -14,8 +14,11 @@ php bin/generate-openapi.php
 ## Menjalankan Proyek
 
 ```bash
-php -S localhost:8000 -t public
+php -S localhost:8000 -t public public/index.php
 ```
+
+- Mode di atas memastikan seluruh request menerus ke router kustom (termasuk `swagger/openapi.json`) saat file fisik tidak ditemukan.
+- Alternatif: salin atau symlink `swagger/openapi.json` ke `public/swagger/openapi.json` jika ingin tetap memakai perintah bawaan PHP tanpa router script.
 
 Endpoint penting:
 
