@@ -920,6 +920,169 @@
                 }
             }
         },
+        "/rating": {
+            "get": {
+                "tags": [
+                    "Rating"
+                ],
+                "summary": "List semua entri rating",
+                "operationId": "e7d48a7919923653937780e4ac16ac4d",
+                "responses": {
+                    "200": {
+                        "description": "Daftar entri rating",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Rating"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Rating"
+                ],
+                "summary": "Buat entri rating baru",
+                "operationId": "325fa0816480c759a8f37a994707d864",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RatingCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Entri rating berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rating"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat entri rating"
+                    }
+                }
+            }
+        },
+        "/rating/{id}": {
+            "get": {
+                "tags": [
+                    "Rating"
+                ],
+                "summary": "Detail entri rating",
+                "operationId": "94c10aea61235e0e2ca9c8fca85cfe51",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail entri rating",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rating"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri rating tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Rating"
+                ],
+                "summary": "Perbarui entri rating",
+                "operationId": "27f48d7ebfa8e5a1b2607783a57907ba",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RatingUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri rating berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rating"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri rating tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Rating"
+                ],
+                "summary": "Hapus entri rating",
+                "operationId": "6cacc904204e2c569c2a28ec28a495d8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Entri rating berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Entri rating tidak ditemukan"
+                    }
+                }
+            }
+        },
         "/tag": {
             "get": {
                 "tags": [
@@ -1517,6 +1680,92 @@
                 },
                 "type": "object"
             },
+            "Rating": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "id_project": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "example": 4
+                    },
+                    "comment": {
+                        "type": "string",
+                        "example": "Great project!",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-11-12T08:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "RatingCreateRequest": {
+                "required": [
+                    "id_project",
+                    "name",
+                    "rating"
+                ],
+                "properties": {
+                    "id_project": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "example": 5
+                    },
+                    "comment": {
+                        "type": "string",
+                        "example": "Really enjoyed this project",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RatingUpdateRequest": {
+                "properties": {
+                    "id_project": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Jane Doe"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "example": 3
+                    },
+                    "comment": {
+                        "type": "string",
+                        "example": "Updated comment",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Tag": {
                 "required": [
                     "id",
@@ -1564,6 +1813,9 @@
         },
         {
             "name": "Project"
+        },
+        {
+            "name": "Rating"
         },
         {
             "name": "Tag"

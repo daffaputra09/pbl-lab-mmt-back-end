@@ -9,6 +9,7 @@ use App\Controllers\EventController;
 use App\Controllers\GaleriController;
 use App\Controllers\BeritaController;
 use App\Controllers\ProjectController;
+use App\Controllers\RatingController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
@@ -49,3 +50,9 @@ $router->get('/project/{id}', [ProjectController::class, 'show']);
 $router->post('/project', [ProjectController::class, 'store']);
 $router->put('/project/{id}', [ProjectController::class, 'update']);
 $router->delete('/project/{id}', [ProjectController::class, 'destroy']);
+
+$router->get('/rating', [RatingController::class, 'index']);
+$router->get('/rating/{id}', [RatingController::class, 'show']);
+$router->post('/rating', [RatingController::class, 'store']);
+$router->put('/rating/{id}', [RatingController::class, 'update']);
+$router->delete('/rating/{id}', [RatingController::class, 'destroy']);
