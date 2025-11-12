@@ -233,6 +233,210 @@
                 }
             }
         },
+        "/galeri": {
+            "get": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "List semua entri galeri",
+                "operationId": "3b0d7ed114fd6d65f7e2baed88a625b7",
+                "responses": {
+                    "200": {
+                        "description": "Daftar entri galeri",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Galeri"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "Buat entri galeri baru",
+                "operationId": "64ba7fcc9e60924f3fccf2073941a391",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GaleriCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Entri galeri berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Galeri"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat entri galeri"
+                    }
+                }
+            }
+        },
+        "/galeri/{id}": {
+            "get": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "Detail entri galeri",
+                "operationId": "73995c6a045edfa93dcc7d23da20206c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail entri galeri",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Galeri"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri galeri tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "Perbarui entri galeri",
+                "operationId": "7b7c1403beec2fb431932132c1d5a80f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GaleriUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri galeri berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Galeri"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri galeri tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "Hapus entri galeri",
+                "operationId": "99c182861694818c2d21857e24d41fe9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Entri galeri berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Entri galeri tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/galeri/type/{type}": {
+            "get": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "Filter entri galeri berdasarkan tipe",
+                "operationId": "7fe6980bd7269f05cd181125798cad94",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Foto",
+                                "Video"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar entri galeri berdasarkan tipe",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Galeri"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Tipe tidak valid"
+                    }
+                }
+            }
+        },
         "/kategori": {
             "get": {
                 "tags": [
@@ -614,6 +818,106 @@
                 },
                 "type": "object"
             },
+            "Galeri": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "Foto",
+                            "Video"
+                        ],
+                        "example": "Foto"
+                    },
+                    "file_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/media/123.jpg"
+                    },
+                    "tanggal_kegiatan": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-10-25",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-11-11T14:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "GaleriCreateRequest": {
+                "required": [
+                    "type",
+                    "file_url"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "Foto",
+                            "Video"
+                        ],
+                        "example": "Foto"
+                    },
+                    "file_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/media/123.jpg"
+                    },
+                    "tanggal_kegiatan": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-10-25",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-11-11T14:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "GaleriUpdateRequest": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "Foto",
+                            "Video"
+                        ],
+                        "example": "Foto"
+                    },
+                    "file_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/media/123.jpg"
+                    },
+                    "tanggal_kegiatan": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-12-25",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-12T14:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
             "Kategori": {
                 "required": [
                     "id",
@@ -708,6 +1012,10 @@
         {
             "name": "Event",
             "description": "Event"
+        },
+        {
+            "name": "Galeri",
+            "description": "Galeri"
         }
     ]
 }

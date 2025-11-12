@@ -6,7 +6,7 @@ use App\Controllers\DocsController;
 use App\Controllers\KategoriController;
 use App\Controllers\TagController;
 use App\Controllers\EventController;
-
+use App\Controllers\GaleriController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
@@ -29,3 +29,9 @@ $router->get('/event/{id}', [EventController::class, 'show']);
 $router->post('/event', [EventController::class, 'store']);
 $router->put('/event/{id}', [EventController::class, 'update']);
 $router->delete('/event/{id}', [EventController::class, 'destroy']);
+
+$router->get('/galeri', [GaleriController::class, 'index']);
+$router->get('/galeri/{id}', [GaleriController::class, 'show']);
+$router->post('/galeri', [GaleriController::class, 'store']);
+$router->put('/galeri/{id}', [GaleriController::class, 'update']);
+$router->delete('/galeri/{id}', [GaleriController::class, 'destroy']);
