@@ -1,6 +1,169 @@
 {
     "openapi": "3.0.0",
     "paths": {
+        "/berita": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "List semua entri berita",
+                "operationId": "b05e96bb4f07e02eb571cc646b8a0d70",
+                "responses": {
+                    "200": {
+                        "description": "Daftar entri berita",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Berita"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Buat entri berita baru",
+                "operationId": "8895c5a8e244f61957efd43cadc89ac8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BeritaCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Entri berita berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Berita"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat entri berita"
+                    }
+                }
+            }
+        },
+        "/berita/{id}": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Detail entri berita berdasarkan ID",
+                "operationId": "7d0eb32d7e28aa1fe22478a373d6f188",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail entri berita",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Berita"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri berita tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Perbarui entri berita",
+                "operationId": "3b4917ee8b3e1c7359893225ccf23441",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BeritaUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri berita berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Berita"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri berita tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Hapus entri berita",
+                "operationId": "5810d692c3d6bed43c2a19bfaabc61e3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Entri berita berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Entri berita tidak ditemukan"
+                    }
+                }
+            }
+        },
         "/docs": {
             "get": {
                 "tags": [
@@ -594,6 +757,169 @@
                 }
             }
         },
+        "/project": {
+            "get": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "List semua entri proyek",
+                "operationId": "6bae3ddb0e80f384ea2a398e5e719c36",
+                "responses": {
+                    "200": {
+                        "description": "Daftar entri proyek",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Project"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Buat entri proyek baru",
+                "operationId": "cbd91ff01e8298c059298b7e7a593b83",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProjectCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Entri proyek berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat entri proyek"
+                    }
+                }
+            }
+        },
+        "/project/{id}": {
+            "get": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Detail entri proyek berdasarkan ID",
+                "operationId": "864579af7665c70c700e09e105afaea5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail entri proyek",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri proyek tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Perbarui entri proyek",
+                "operationId": "87b37c1b5800d76b86bf50a128b9b7c2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProjectUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri proyek berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri proyek tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Hapus entri proyek berdasarkan ID",
+                "operationId": "a0ab7fce47fd63b2c6dc22f46a901a6b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Entri proyek berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Entri proyek tidak ditemukan"
+                    }
+                }
+            }
+        },
         "/tag": {
             "get": {
                 "tags": [
@@ -754,6 +1080,113 @@
     },
     "components": {
         "schemas": {
+            "Berita": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "judul": {
+                        "type": "string",
+                        "example": "Pemberitaan Baru Tentang Sekolah"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi lengkap tentang berita..."
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/images/berita123.jpg"
+                    },
+                    "id_user": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "published",
+                            "draft",
+                            "archived"
+                        ],
+                        "example": "published"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-11-12T08:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "BeritaCreateRequest": {
+                "required": [
+                    "judul",
+                    "description",
+                    "image_url"
+                ],
+                "properties": {
+                    "judul": {
+                        "type": "string",
+                        "example": "Pemberitaan Baru Tentang Sekolah"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi lengkap tentang berita..."
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/images/berita123.jpg"
+                    },
+                    "id_user": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "published",
+                            "draft",
+                            "archived"
+                        ],
+                        "example": "published"
+                    }
+                },
+                "type": "object"
+            },
+            "BeritaUpdateRequest": {
+                "properties": {
+                    "judul": {
+                        "type": "string",
+                        "example": "Pembaruan Judul Berita"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi yang diperbarui..."
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/images/berita456.jpg"
+                    },
+                    "id_user": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "published",
+                            "draft",
+                            "archived"
+                        ],
+                        "example": "draft"
+                    }
+                },
+                "type": "object"
+            },
             "Event": {
                 "properties": {
                     "id": {
@@ -957,6 +1390,133 @@
                 },
                 "type": "object"
             },
+            "Project": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Website Sekolah Baru"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi detail proyek pengembangan website sekolah\u2026"
+                    },
+                    "id_kategori": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "video_url": {
+                        "type": "string",
+                        "example": "https://youtu.be/abc123",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://cdn.example.com/images/proyek1.jpg"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "completed"
+                        ],
+                        "example": "active"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-11-12T09:30:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectCreateRequest": {
+                "required": [
+                    "name",
+                    "id_kategori"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Website Sekolah Baru"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi detail proyek pengembangan website sekolah\u2026"
+                    },
+                    "id_kategori": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "video_url": {
+                        "type": "string",
+                        "example": "https://youtu.be/abc123",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://cdn.example.com/images/proyek1.jpg"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "completed"
+                        ],
+                        "example": "active"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectUpdateRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Website Sekolah Baru \u2013 Versi 2"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi yang diperbarui\u2026"
+                    },
+                    "id_kategori": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "video_url": {
+                        "type": "string",
+                        "example": "https://youtu.be/def456",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://cdn.example.com/images/proyek2.jpg"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "completed"
+                        ],
+                        "example": "completed"
+                    }
+                },
+                "type": "object"
+            },
             "Tag": {
                 "required": [
                     "id",
@@ -1003,7 +1563,14 @@
             "name": "Kategori"
         },
         {
+            "name": "Project"
+        },
+        {
             "name": "Tag"
+        },
+        {
+            "name": "Berita",
+            "description": "Berita"
         },
         {
             "name": "Documentation",

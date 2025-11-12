@@ -7,6 +7,8 @@ use App\Controllers\KategoriController;
 use App\Controllers\TagController;
 use App\Controllers\EventController;
 use App\Controllers\GaleriController;
+use App\Controllers\BeritaController;
+use App\Controllers\ProjectController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
@@ -35,3 +37,15 @@ $router->get('/galeri/{id}', [GaleriController::class, 'show']);
 $router->post('/galeri', [GaleriController::class, 'store']);
 $router->put('/galeri/{id}', [GaleriController::class, 'update']);
 $router->delete('/galeri/{id}', [GaleriController::class, 'destroy']);
+
+$router->get('/berita', [BeritaController::class, 'index']);
+$router->get('/berita/{id}', [BeritaController::class, 'show']);
+$router->post('/berita', [BeritaController::class, 'store']);
+$router->put('/berita/{id}', [BeritaController::class, 'update']);
+$router->delete('/berita/{id}', [BeritaController::class, 'destroy']);
+
+$router->get('/project', [ProjectController::class, 'index']);
+$router->get('/project/{id}', [ProjectController::class, 'show']);
+$router->post('/project', [ProjectController::class, 'store']);
+$router->put('/project/{id}', [ProjectController::class, 'update']);
+$router->delete('/project/{id}', [ProjectController::class, 'destroy']);
