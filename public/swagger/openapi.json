@@ -762,8 +762,20 @@
                 "tags": [
                     "Project"
                 ],
-                "summary": "List semua entri proyek",
+                "summary": "List semua entri proyek (dapat difilter berdasarkan id_kategori)",
                 "operationId": "6bae3ddb0e80f384ea2a398e5e719c36",
+                "parameters": [
+                    {
+                        "name": "id_kategori",
+                        "in": "query",
+                        "description": "Filter proyek berdasarkan id_kategori",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Daftar entri proyek",

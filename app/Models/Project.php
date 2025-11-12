@@ -13,15 +13,27 @@ class Project
     {
     }
 
-    public function all(): array
+    public function all(?int $idKategori = null): array
     {
-        $stmt = $this->db->query(
-            'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
-             FROM project 
-             ORDER BY created_at DESC'
-        );
+        if ($idKategori) {
+            $stmt = $this->db->prepare(
+                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
+                FROM project 
+                WHERE id_kategori = :id_kategori 
+                ORDER BY created_at DESC'
+            );
+            $stmt->execute(['id_kategori' => $idKategori]);
+        } else {
+            $stmt = $this->db->query(
+                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
+                FROM project 
+                ORDER BY created_at DESC'
+            );
+        }
+
         return $stmt->fetchAll();
     }
+
 
     public function find(int $id): ?array
     {

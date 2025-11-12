@@ -25,8 +25,17 @@ class ProjectController
 
     #[OA\Get(
         path: '/project',
-        summary: 'List semua entri proyek',
+        summary: 'List semua entri proyek (dapat difilter berdasarkan id_kategori)',
         tags: ['Project'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id_kategori',
+                in: 'query',
+                required: false,
+                description: 'Filter proyek berdasarkan id_kategori',
+                schema: new OA\Schema(type: 'integer', example: 3)
+            )
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -38,14 +47,18 @@ class ProjectController
             )
         ]
     )]
+    
     public function index(): void
     {
         try {
-            Response::json($this->project->all());
+            $idKategori = isset($_GET['id_kategori']) ? (int) $_GET['id_kategori'] : null; // konversi ke integer
+            $projects = $this->project->all($idKategori);
+            Response::json($projects);
         } catch (PDOException $exception) {
             Response::json(['message' => 'Gagal mengambil data proyek', 'error' => $exception->getMessage()], 500);
         }
     }
+
 
     #[OA\Get(
         path: '/project/{id}',

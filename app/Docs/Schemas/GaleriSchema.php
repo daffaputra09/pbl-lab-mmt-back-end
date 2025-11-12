@@ -30,7 +30,6 @@ class GaleriSchema
         new OA\Property(property: 'type', type: 'string', example: 'Foto', enum: ['Foto', 'Video']),
         new OA\Property(property: 'file_url', type: 'string', example: 'https://cdn.example.com/media/123.jpg'),
         new OA\Property(property: 'tanggal_kegiatan', type: 'string', format: 'date', nullable: true, example: '2024-10-25'),
-        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2024-11-11T14:00:00Z')
     ]
 )]
 class GaleriCreateRequest
@@ -45,7 +44,6 @@ class GaleriCreateRequest
         new OA\Property(property: 'type', type: 'string', example: 'Foto', enum: ['Foto', 'Video']),
         new OA\Property(property: 'file_url', type: 'string', example: 'https://cdn.example.com/media/123.jpg'),
         new OA\Property(property: 'tanggal_kegiatan', type: 'string', format: 'date', nullable: true, example: '2024-12-25'),
-        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2024-12-12T14:00:00Z')
     ]
 )]
 class GaleriUpdateRequest
