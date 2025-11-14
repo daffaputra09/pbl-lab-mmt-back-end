@@ -7,6 +7,12 @@ namespace App\Controllers;
 use App\Http\Response;
 use OpenApi\Attributes as OA;
 
+#[OA\SecurityScheme(
+    securityScheme: 'bearerAuth',
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT'
+)]
 class DocsController
 {
     #[OA\Get(

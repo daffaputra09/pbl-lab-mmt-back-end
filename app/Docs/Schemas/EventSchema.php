@@ -27,7 +27,7 @@ class EventSchema
     properties: [
         new OA\Property(property: 'judul', type: 'string', example: 'Webinar Terbaru'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Pembahasan mendalam tentang framework baru'),
-        new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/webinar.jpg')
+        new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'File gambar event (JPG, PNG, GIF, WEBP, max 5MB)')
     ]
 )]
 class EventCreateRequest
@@ -40,7 +40,7 @@ class EventCreateRequest
     properties: [
         new OA\Property(property: 'judul', type: 'string', example: 'Webinar Terbaru 2024'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Pembahasan mendalam dan update terkini'),
-        new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/webinar-updated.jpg')
+        new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar')
     ]
 )]
 class EventUpdateRequest

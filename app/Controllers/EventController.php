@@ -6,13 +6,14 @@ namespace App\Controllers;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Http\FileUploadHelper;
 use App\Models\Event;
 use Config\Database;
 use InvalidArgumentException;
 use OpenApi\Attributes as OA;
 use PDOException;
 
-#[OA\Event(name: 'Event')]
+#[OA\Tag(name: 'Event')]
 class EventController
 {
     private Event $event;
@@ -114,7 +115,10 @@ class EventController
         tags: ['Event'],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/EventCreateRequest')
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/EventCreateRequest')
+            )
         ),
         responses: [
             new OA\Response(
@@ -129,16 +133,11 @@ class EventController
     )]
     public function store(): void
     {
-        try {
-            $payload = Request::json();
-        } catch (InvalidArgumentException $exception) {
-            Response::json(['message' => $exception->getMessage()], 400);
-            return;
-        }
-
-        $judul = trim($payload['judul'] ?? '');
-        $description = trim($payload['description'] ?? null);
-        $imageUrl = trim($payload['image_url'] ?? null);
+        // Get form data
+        $formData = Request::getFormData();
+        
+        $judul = trim($formData['judul'] ?? '');
+        $description = trim($formData['description'] ?? '');
 
         if ($judul === '') {
             Response::json(['message' => 'Field judul wajib diisi'], 422);
@@ -150,9 +149,25 @@ class EventController
             return;
         }
 
+        // Handle file upload
+        $imageUrl = null;
+        if (Request::hasFile('image')) {
+            try {
+                $file = Request::getFile('image');
+                $imageUrl = FileUploadHelper::uploadImage($file, 'uploads/event');
+            } catch (InvalidArgumentException $exception) {
+                Response::json(['message' => 'Gagal upload gambar: ' . $exception->getMessage()], 400);
+                return;
+            }
+        }
+
         try {
-            $event = $this->event->create($judul, $description ?: null, $imageUrl ?: null);
+            $event = $this->event->create($judul, $description ?: null, $imageUrl);
         } catch (PDOException $exception) {
+            // Rollback: hapus file jika gagal insert ke database
+            if ($imageUrl) {
+                FileUploadHelper::deleteFile($imageUrl);
+            }
             Response::json(['message' => 'Gagal membuat event', 'error' => $exception->getMessage()], 500);
             return;
         }
@@ -162,7 +177,7 @@ class EventController
 
     // UPDATE
 
-    #[OA\Put(
+    #[OA\Post(
         path: '/event/{id}',
         summary: 'Perbarui event',
         tags: ['Event'],
@@ -171,7 +186,10 @@ class EventController
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/EventUpdateRequest')
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/EventUpdateRequest')
+            )
         ),
         responses: [
             new OA\Response(
@@ -186,28 +204,35 @@ class EventController
     )]
     public function update(int $id): void
     {
-        try {
-            $payload = Request::json();
-        } catch (InvalidArgumentException $exception) {
-            Response::json(['message' => $exception->getMessage()], 400);
-            return;
-        }
-
         $existing = $this->event->find($id);
         if ($existing === null) {
             Response::json(['message' => 'Event tidak ditemukan'], 404);
             return;
         }
 
-        // Ambil data dari payload atau gunakan data lama
-        $judul = trim($payload['judul'] ?? $existing['judul']);
-        $description = array_key_exists('description', $payload) ? $payload['description'] : $existing['description'];
-        $imageUrl = array_key_exists('image_url', $payload) ? $payload['image_url'] : $existing['image_url'];
+        $formData = Request::getFormData();
 
-        // Trim string dan konversi ke null jika kosong
+        $judul = isset($formData['judul']) ? trim($formData['judul']) : $existing['judul'];
+        $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
+        $imageUrl = $existing['image_url'];
+
+        $newImageUrl = null;
+        if (Request::hasFile('image')) {
+            try {
+                $file = Request::getFile('image');
+                $newImageUrl = FileUploadHelper::uploadImage($file, 'uploads/event');
+                if ($imageUrl) {
+                    FileUploadHelper::deleteFile($imageUrl);
+                }
+                $imageUrl = $newImageUrl;
+            } catch (InvalidArgumentException $exception) {
+                Response::json(['message' => 'Gagal upload gambar: ' . $exception->getMessage()], 400);
+                return;
+            }
+        }
+
         $judul = trim($judul);
         $description = $description ? trim($description) : null;
-        $imageUrl = $imageUrl ? trim($imageUrl) : null;
 
         if ($judul === '') {
             Response::json(['message' => 'Field judul wajib diisi'], 422);
@@ -222,6 +247,9 @@ class EventController
         try {
             $event = $this->event->update($id, $judul, $description, $imageUrl);
         } catch (PDOException $exception) {
+            if ($newImageUrl) {
+                FileUploadHelper::deleteFile($newImageUrl);
+            }
             Response::json(['message' => 'Gagal memperbarui event', 'error' => $exception->getMessage()], 500);
             return;
         }
@@ -251,11 +279,21 @@ class EventController
     public function destroy(int $id): void
     {
         try {
+            $event = $this->event->find($id);
+            if ($event === null) {
+                Response::json(['message' => 'Event tidak ditemukan'], 404);
+                return;
+            }
+
             $deleted = $this->event->delete($id);
 
             if (!$deleted) {
                 Response::json(['message' => 'Event tidak ditemukan'], 404);
                 return;
+            }
+
+            if ($event['image_url']) {
+                FileUploadHelper::deleteFile($event['image_url']);
             }
         } catch (PDOException $exception) {
             Response::json(['message' => 'Gagal menghapus event', 'error' => $exception->getMessage()], 500);

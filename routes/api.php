@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controllers\AuthController;
 use App\Controllers\DocsController;
 use App\Controllers\KategoriController;
 use App\Controllers\TagController;
@@ -10,10 +11,16 @@ use App\Controllers\GaleriController;
 use App\Controllers\BeritaController;
 use App\Controllers\ProjectController;
 use App\Controllers\RatingController;
+use App\Controllers\UserController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
 $router->get('/swagger/openapi.json', [DocsController::class, 'json']);
+
+$router->post('/auth/login', [AuthController::class, 'login']);
+
+$router->post('/user', [UserController::class, 'store']);
+$router->get('/user/profile', [UserController::class, 'profile']);
 
 $router->get('/kategori', [KategoriController::class, 'index']);
 $router->get('/kategori/{id}', [KategoriController::class, 'show']);
@@ -31,6 +38,7 @@ $router->get('/event', [EventController::class, 'index']);
 $router->get('/event/{id}', [EventController::class, 'show']);
 $router->post('/event', [EventController::class, 'store']);
 $router->put('/event/{id}', [EventController::class, 'update']);
+$router->post('/event/{id}', [EventController::class, 'update']);
 $router->delete('/event/{id}', [EventController::class, 'destroy']);
 
 $router->get('/galeri', [GaleriController::class, 'index']);
