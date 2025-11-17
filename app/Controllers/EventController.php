@@ -134,7 +134,12 @@ class EventController
     public function store(): void
     {
         // Get form data
-        $formData = Request::getFormData();
+        try {
+            $formData = Request::getFormData();
+        } catch (InvalidArgumentException $exception) {
+            Response::json(['message' => $exception->getMessage()], 400);
+            return;
+        }
         
         $judul = trim($formData['judul'] ?? '');
         $description = trim($formData['description'] ?? '');

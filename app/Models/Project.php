@@ -31,7 +31,8 @@ class Project
             );
         }
 
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'parseImageUrl'], $results);
     }
 
 
@@ -44,7 +45,11 @@ class Project
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
 
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->parseImageUrl($result);
     }
 
     public function create(
@@ -72,7 +77,8 @@ class Project
             'status'      => $status,
         ]);
 
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+        return $this->parseImageUrl($result);
     }
 
     public function update(
@@ -108,7 +114,11 @@ class Project
         ]);
 
         $result = $stmt->fetch();
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->parseImageUrl($result);
     }
 
     public function delete(int $id): bool
@@ -127,6 +137,36 @@ class Project
              ORDER BY created_at DESC'
         );
         $stmt->execute(['status' => $status]);
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'parseImageUrl'], $results);
+    }
+
+    private function parseImageUrl(array $row): array
+    {
+        if (isset($row['image_url'])) {
+            $imageUrl = $row['image_url'];
+            
+            if (is_string($imageUrl)) {
+                if (strpos($imageUrl, '{') === 0 && strpos($imageUrl, '}') === strlen($imageUrl) - 1) {
+                    $imageUrl = trim($imageUrl, '{}');
+                    if ($imageUrl === '') {
+                        $row['image_url'] = [];
+                    } else {
+                        $row['image_url'] = array_map('trim', explode(',', $imageUrl));
+                        $row['image_url'] = array_map(function($url) {
+                            return trim($url, '"');
+                        }, $row['image_url']);
+                    }
+                } else {
+                    $row['image_url'] = [];
+                }
+            } elseif (!is_array($imageUrl)) {
+                $row['image_url'] = [];
+            }
+        } else {
+            $row['image_url'] = [];
+        }
+
+        return $row;
     }
 }

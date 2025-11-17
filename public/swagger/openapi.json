@@ -73,7 +73,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/BeritaCreateRequest"
                             }
@@ -153,6 +153,51 @@
                     "required": true,
                     "content": {
                         "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BeritaUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri berita berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Berita"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri berita tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Perbarui entri berita (dengan upload gambar)",
+                "operationId": "4221be809f74d3a5bc537200117c0f36",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/BeritaUpdateRequest"
                             }
@@ -468,7 +513,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/GaleriCreateRequest"
                             }
@@ -573,6 +618,51 @@
                     }
                 }
             },
+            "post": {
+                "tags": [
+                    "Galeri"
+                ],
+                "summary": "Perbarui entri galeri (dengan upload file)",
+                "operationId": "8884e3f1612c5d6ea512cac7d343f4ab",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GaleriUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri galeri berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Galeri"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri galeri tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "Galeri"
@@ -614,8 +704,9 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "Foto",
-                                "Video"
+                                "foto",
+                                "video",
+                                "lottie"
                             ]
                         }
                     }
@@ -841,7 +932,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/ProjectCreateRequest"
                             }
@@ -921,6 +1012,51 @@
                     "required": true,
                     "content": {
                         "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProjectUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entri proyek berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Entri proyek tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Perbarui entri proyek (dengan upload file)",
+                "operationId": "1194607a4661f62064a0c0f9b8deafe7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/ProjectUpdateRequest"
                             }
@@ -1380,7 +1516,7 @@
                     },
                     "image_url": {
                         "type": "string",
-                        "example": "https://cdn.example.com/images/berita123.jpg"
+                        "example": "/uploads/berita/file_6546f7a8e1234_1699012345.jpg"
                     },
                     "id_user": {
                         "type": "integer",
@@ -1407,8 +1543,7 @@
             "BeritaCreateRequest": {
                 "required": [
                     "judul",
-                    "description",
-                    "image_url"
+                    "description"
                 ],
                 "properties": {
                     "judul": {
@@ -1419,9 +1554,11 @@
                         "type": "string",
                         "example": "Deskripsi lengkap tentang berita..."
                     },
-                    "image_url": {
+                    "image": {
+                        "description": "File gambar berita (JPG, PNG, GIF, WEBP, max 5MB). Wajib diisi untuk flow upload file.",
                         "type": "string",
-                        "example": "https://cdn.example.com/images/berita123.jpg"
+                        "format": "binary",
+                        "nullable": true
                     },
                     "id_user": {
                         "type": "integer",
@@ -1450,9 +1587,11 @@
                         "type": "string",
                         "example": "Deskripsi yang diperbarui..."
                     },
-                    "image_url": {
+                    "image": {
+                        "description": "File gambar berita (JPG, PNG, GIF, WEBP, max 5MB). Opsional - kirim hanya jika ingin mengubah gambar.",
                         "type": "string",
-                        "example": "https://cdn.example.com/images/berita456.jpg"
+                        "format": "binary",
+                        "nullable": true
                     },
                     "id_user": {
                         "type": "integer",
@@ -1546,14 +1685,15 @@
                     "type": {
                         "type": "string",
                         "enum": [
-                            "Foto",
-                            "Video"
+                            "foto",
+                            "video",
+                            "lottie"
                         ],
-                        "example": "Foto"
+                        "example": "foto"
                     },
                     "file_url": {
                         "type": "string",
-                        "example": "https://cdn.example.com/media/123.jpg"
+                        "example": "/uploads/galeri/file_6546f7a8e1234_1699012345.jpg"
                     },
                     "tanggal_kegiatan": {
                         "type": "string",
@@ -1571,27 +1711,27 @@
             },
             "GaleriCreateRequest": {
                 "required": [
-                    "type",
-                    "file_url"
+                    "type"
                 ],
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
                     "type": {
+                        "description": "Tipe file: \"foto\" untuk gambar (JPG, PNG, GIF, WEBP), \"video\" untuk video (MP4, MPEG, MOV, AVI), atau \"lottie\" untuk file animasi Lottie (JSON, max 100MB)",
                         "type": "string",
                         "enum": [
-                            "Foto",
-                            "Video"
+                            "foto",
+                            "video",
+                            "lottie"
                         ],
-                        "example": "Foto"
+                        "example": "foto"
                     },
-                    "file_url": {
+                    "file": {
+                        "description": "File yang akan diupload. Untuk type \"foto\": JPG, PNG, GIF, WEBP (max 100MB). Untuk type \"video\": MP4, MPEG, MOV, AVI (max 100MB). Untuk type \"lottie\": JSON/Lottie files (max 100MB). Wajib diisi untuk flow upload file.",
                         "type": "string",
-                        "example": "https://cdn.example.com/media/123.jpg"
+                        "format": "binary",
+                        "nullable": true
                     },
                     "tanggal_kegiatan": {
+                        "description": "Tanggal kegiatan dalam format YYYY-MM-DD",
                         "type": "string",
                         "format": "date",
                         "example": "2024-10-25",
@@ -1602,23 +1742,24 @@
             },
             "GaleriUpdateRequest": {
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
                     "type": {
+                        "description": "Tipe file: \"foto\" untuk gambar, \"video\" untuk video, atau \"lottie\" untuk file animasi Lottie",
                         "type": "string",
                         "enum": [
-                            "Foto",
-                            "Video"
+                            "foto",
+                            "video",
+                            "lottie"
                         ],
-                        "example": "Foto"
+                        "example": "foto"
                     },
-                    "file_url": {
+                    "file": {
+                        "description": "File yang akan diupload. Untuk type \"foto\": JPG, PNG, GIF, WEBP (max 100MB). Untuk type \"video\": MP4, MPEG, MOV, AVI (max 100MB). Untuk type \"lottie\": JSON/Lottie files (max 100MB). Opsional - kirim hanya jika ingin mengubah file.",
                         "type": "string",
-                        "example": "https://cdn.example.com/media/123.jpg"
+                        "format": "binary",
+                        "nullable": true
                     },
                     "tanggal_kegiatan": {
+                        "description": "Tanggal kegiatan dalam format YYYY-MM-DD",
                         "type": "string",
                         "format": "date",
                         "example": "2024-12-25",
@@ -1686,14 +1827,14 @@
                     },
                     "video_url": {
                         "type": "string",
-                        "example": "https://youtu.be/abc123",
+                        "example": "/uploads/project/file_6546f7a8e1234_1699012345.mp4",
                         "nullable": true
                     },
                     "image_url": {
                         "type": "array",
                         "items": {
                             "type": "string",
-                            "example": "https://cdn.example.com/images/proyek1.jpg"
+                            "example": "/uploads/project/file_6546f7a8e1234_1699012345.jpg"
                         }
                     },
                     "status": {
@@ -1731,17 +1872,20 @@
                         "type": "integer",
                         "example": 3
                     },
-                    "video_url": {
+                    "video": {
+                        "description": "File video project (MP4, MPEG, MOV, AVI, max 100MB). Opsional - upload video project.",
                         "type": "string",
-                        "example": "https://youtu.be/abc123",
+                        "format": "binary",
                         "nullable": true
                     },
-                    "image_url": {
+                    "images": {
+                        "description": "Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Opsional - upload multiple images untuk project. Gunakan field name \"images[]\" saat upload.",
                         "type": "array",
                         "items": {
                             "type": "string",
-                            "example": "https://cdn.example.com/images/proyek1.jpg"
-                        }
+                            "format": "binary"
+                        },
+                        "nullable": true
                     },
                     "status": {
                         "type": "string",
@@ -1769,17 +1913,20 @@
                         "type": "integer",
                         "example": 4
                     },
-                    "video_url": {
+                    "video": {
+                        "description": "File video project (MP4, MPEG, MOV, AVI, max 100MB). Opsional - kirim hanya jika ingin mengubah video. Video lama akan otomatis terhapus.",
                         "type": "string",
-                        "example": "https://youtu.be/def456",
+                        "format": "binary",
                         "nullable": true
                     },
-                    "image_url": {
+                    "images": {
+                        "description": "Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Opsional - kirim hanya jika ingin mengubah images. Semua images lama akan otomatis terhapus. Gunakan field name \"images[]\" saat upload.",
                         "type": "array",
                         "items": {
                             "type": "string",
-                            "example": "https://cdn.example.com/images/proyek2.jpg"
-                        }
+                            "format": "binary"
+                        },
+                        "nullable": true
                     },
                     "status": {
                         "type": "string",
@@ -2015,7 +2162,13 @@
             "name": "Auth"
         },
         {
+            "name": "Berita"
+        },
+        {
             "name": "Event"
+        },
+        {
+            "name": "Galeri"
         },
         {
             "name": "Kategori"
@@ -2033,16 +2186,8 @@
             "name": "User"
         },
         {
-            "name": "Berita",
-            "description": "Berita"
-        },
-        {
             "name": "Documentation",
             "description": "Documentation"
-        },
-        {
-            "name": "Galeri",
-            "description": "Galeri"
         }
     ]
 }
