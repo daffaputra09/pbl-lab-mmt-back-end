@@ -123,6 +123,7 @@ class FileUploadHelper
             }
         }
 
+        $filePath = str_replace('\\', '/', $filePath);
         $filePath = ltrim($filePath, '/');
         
         $fullPath = dirname(__DIR__, 2) . '/public/' . $filePath;
@@ -188,7 +189,11 @@ class FileUploadHelper
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $basePath = dirname($scriptName);
         
-        if ($basePath === '/') {
+        $basePath = str_replace('\\', '/', $basePath);
+        
+        $basePath = rtrim($basePath, '/');
+        
+        if ($basePath === '/' || $basePath === '') {
             $basePath = '';
         }
         
@@ -205,6 +210,8 @@ class FileUploadHelper
             return $filePath;
         }
 
+        $filePath = str_replace('\\', '/', $filePath);
+        
         if (strpos($filePath, '/') !== 0) {
             $filePath = '/' . $filePath;
         }
