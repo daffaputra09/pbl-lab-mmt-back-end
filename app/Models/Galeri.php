@@ -19,7 +19,7 @@ class Galeri
         $stmt = $this->db->query(
             'SELECT id, type, file_url, tanggal_kegiatan, created_at 
              FROM galeri 
-             ORDER BY tanggal_kegiatan DESC, created_at DESC'
+             ORDER BY created_at DESC'
         );
         $results = $stmt->fetchAll();
         return array_map([$this, 'transformFileUrl'], $results);
@@ -32,7 +32,7 @@ class Galeri
         $stmt = $this->db->prepare(
             'SELECT id, type, file_url, tanggal_kegiatan, created_at 
              FROM galeri 
-             ORDER BY tanggal_kegiatan DESC, created_at DESC
+             ORDER BY created_at DESC
              LIMIT :limit OFFSET :offset'
         );
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
@@ -122,7 +122,7 @@ class Galeri
             'SELECT id, type, file_url, tanggal_kegiatan, created_at 
              FROM galeri 
              WHERE LOWER(type) = LOWER(:type)
-             ORDER BY tanggal_kegiatan DESC'
+             ORDER BY created_at DESC'
         );
         $stmt->execute(['type' => $type]);
         
