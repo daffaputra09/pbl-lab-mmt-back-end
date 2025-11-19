@@ -20,6 +20,29 @@ class Kategori
         return $stmt->fetchAll();
     }
 
+    public function paginate(int $page = 1, int $limit = 10): array
+    {
+        $offset = ($page - 1) * $limit;
+        
+        $stmt = $this->db->prepare(
+            'SELECT id, name 
+             FROM kategori 
+             ORDER BY name
+             LIMIT :limit OFFSET :offset'
+        );
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+
+    public function count(): int
+    {
+        $stmt = $this->db->query('SELECT COUNT(*) FROM kategori');
+        return (int) $stmt->fetchColumn();
+    }
+
     public function find(int $id): ?array
     {
         $stmt = $this->db->prepare('SELECT id, name FROM kategori WHERE id = :id');

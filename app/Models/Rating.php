@@ -23,6 +23,29 @@ class Rating
         return $stmt->fetchAll();
     }
 
+    public function paginate(int $page = 1, int $limit = 10): array
+    {
+        $offset = ($page - 1) * $limit;
+        
+        $stmt = $this->db->prepare(
+            'SELECT id, id_project, name, rating, comment, created_at
+             FROM rating
+             ORDER BY created_at DESC
+             LIMIT :limit OFFSET :offset'
+        );
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+
+    public function count(): int
+    {
+        $stmt = $this->db->query('SELECT COUNT(*) FROM rating');
+        return (int) $stmt->fetchColumn();
+    }
+
     public function find(int $id): ?array
     {
         $stmt = $this->db->prepare(

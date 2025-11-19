@@ -35,6 +35,49 @@ class Project
         return array_map([$this, 'parseImageUrl'], $results);
     }
 
+    public function paginate(int $page = 1, int $limit = 10, ?int $idKategori = null): array
+    {
+        $offset = ($page - 1) * $limit;
+        
+        if ($idKategori) {
+            $stmt = $this->db->prepare(
+                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
+                FROM project 
+                WHERE id_kategori = :id_kategori 
+                ORDER BY created_at DESC
+                LIMIT :limit OFFSET :offset'
+            );
+            $stmt->bindValue(':id_kategori', $idKategori, \PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->db->prepare(
+                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
+                FROM project 
+                ORDER BY created_at DESC
+                LIMIT :limit OFFSET :offset'
+            );
+            $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+            $stmt->execute();
+        }
+
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'parseImageUrl'], $results);
+    }
+
+    public function count(?int $idKategori = null): int
+    {
+        if ($idKategori) {
+            $stmt = $this->db->prepare('SELECT COUNT(*) FROM project WHERE id_kategori = :id_kategori');
+            $stmt->execute(['id_kategori' => $idKategori]);
+        } else {
+            $stmt = $this->db->query('SELECT COUNT(*) FROM project');
+        }
+        return (int) $stmt->fetchColumn();
+    }
+
 
     public function find(int $id): ?array
     {

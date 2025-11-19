@@ -26,23 +26,76 @@ class BeritaController
     
     #[OA\Get(
         path: '/berita',
-        summary: 'List semua entri berita',
+        summary: 'List semua entri berita dengan pagination',
         tags: ['Berita'],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Nomor halaman (default: 1, hanya digunakan jika limit diisi)',
+                schema: new OA\Schema(type: 'integer', minimum: 1, default: 1, example: 1)
+            ),
+            new OA\Parameter(
+                name: 'limit',
+                in: 'query',
+                required: false,
+                description: 'Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.',
+                schema: new OA\Schema(type: 'integer', minimum: 1, example: 10)
+            )
+        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Daftar entri berita',
-                content: new OA\JsonContent(
-                    type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/Berita')
-                )
-            )
+                description: 'Daftar entri berita dengan pagination',
+                content: new OA\JsonContent(ref: '#/components/schemas/BeritaPaginatedResponse')
+            ),
+            new OA\Response(response: 400, description: 'Parameter tidak valid'),
+            new OA\Response(response: 500, description: 'Gagal mengambil data berita')
         ]
     )]
     public function index(): void
     {
         try {
-            Response::json($this->berita->all());
+            $page = (int) Request::getQuery('page', 1);
+            $limitParam = Request::getQuery('limit', null);
+            $limit = $limitParam !== null ? (int) $limitParam : null;
+
+            if ($page < 1) {
+                Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
+                return;
+            }
+
+            if ($limit !== null && $limit < 1) {
+                Response::json(['message' => 'Parameter limit harus lebih besar dari 0'], 400);
+                return;
+            }
+
+            $total = $this->berita->count();
+
+            if ($limit === null) {
+                $data = $this->berita->all();
+                Response::json([
+                    'data' => $data,
+                    'pagination' => null
+                ]);
+                return;
+            }
+
+            $totalPages = (int) ceil($total / $limit);
+            $data = $this->berita->paginate($page, $limit);
+
+            Response::json([
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'total_pages' => $totalPages,
+                    'has_next' => $page < $totalPages,
+                    'has_prev' => $page > 1
+                ]
+            ]);
         } catch (PDOException $exception) {
             Response::json([
                 'message' => 'Gagal mengambil data berita',

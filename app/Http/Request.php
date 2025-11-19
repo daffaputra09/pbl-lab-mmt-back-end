@@ -155,5 +155,15 @@ class Request
         $contentType = self::contentType();
         return strpos($contentType, 'multipart/form-data') !== false;
     }
+
+    public static function getQuery(string $key, $default = null)
+    {
+        return $_GET[$key] ?? $default;
+    }
+
+    public static function getAllQuery(): array
+    {
+        return $_GET;
+    }
 }
 

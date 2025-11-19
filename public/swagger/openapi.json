@@ -46,21 +46,49 @@
                 "tags": [
                     "Berita"
                 ],
-                "summary": "List semua entri berita",
+                "summary": "List semua entri berita dengan pagination",
                 "operationId": "b05e96bb4f07e02eb571cc646b8a0d70",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar entri berita",
+                        "description": "Daftar entri berita dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Berita"
-                                    }
+                                    "$ref": "#/components/schemas/BeritaPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data berita"
                     }
                 }
             },
@@ -282,21 +310,49 @@
                 "tags": [
                     "Event"
                 ],
-                "summary": "List semua event",
+                "summary": "List semua event dengan pagination",
                 "operationId": "eabd6f0213afeba2dce5e31077d0a512",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar event",
+                        "description": "Daftar event dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Event"
-                                    }
+                                    "$ref": "#/components/schemas/EventPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data event"
                     }
                 }
             },
@@ -486,21 +542,49 @@
                 "tags": [
                     "Galeri"
                 ],
-                "summary": "List semua entri galeri",
+                "summary": "List semua entri galeri dengan pagination",
                 "operationId": "3b0d7ed114fd6d65f7e2baed88a625b7",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar entri galeri",
+                        "description": "Daftar entri galeri dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Galeri"
-                                    }
+                                    "$ref": "#/components/schemas/GaleriPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data galeri"
                     }
                 }
             },
@@ -736,21 +820,49 @@
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "List semua kategori",
+                "summary": "List semua kategori dengan pagination",
                 "operationId": "fa0d93b81b8ea8a413b8f18a204b7969",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar kategori",
+                        "description": "Daftar kategori dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Kategori"
-                                    }
+                                    "$ref": "#/components/schemas/KategoriPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data kategori"
                     }
                 }
             },
@@ -893,9 +1005,32 @@
                 "tags": [
                     "Project"
                 ],
-                "summary": "List semua entri proyek (dapat difilter berdasarkan id_kategori)",
+                "summary": "List semua entri proyek dengan pagination (dapat difilter berdasarkan id_kategori)",
                 "operationId": "6bae3ddb0e80f384ea2a398e5e719c36",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    },
                     {
                         "name": "id_kategori",
                         "in": "query",
@@ -909,17 +1044,20 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daftar entri proyek",
+                        "description": "Daftar entri proyek dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Project"
-                                    }
+                                    "$ref": "#/components/schemas/ProjectPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data proyek"
                     }
                 }
             },
@@ -1113,21 +1251,49 @@
                 "tags": [
                     "Rating"
                 ],
-                "summary": "List semua entri rating",
+                "summary": "List semua entri rating dengan pagination",
                 "operationId": "e7d48a7919923653937780e4ac16ac4d",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar entri rating",
+                        "description": "Daftar entri rating dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Rating"
-                                    }
+                                    "$ref": "#/components/schemas/RatingPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data rating"
                     }
                 }
             },
@@ -1276,21 +1442,49 @@
                 "tags": [
                     "Tag"
                 ],
-                "summary": "List semua tag",
+                "summary": "List semua tag dengan pagination",
                 "operationId": "dea04224d7f50878278cb658b2cbe2d0",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar tag",
+                        "description": "Daftar tag dengan pagination",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Tag"
-                                    }
+                                    "$ref": "#/components/schemas/TagPaginatedResponse"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data tag"
                     }
                 }
             },
@@ -1610,6 +1804,48 @@
                 },
                 "type": "object"
             },
+            "BeritaPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Berita"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Event": {
                 "properties": {
                     "id": {
@@ -1671,6 +1907,48 @@
                         "description": "File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar",
                         "type": "string",
                         "format": "binary",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "EventPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Event"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
                         "nullable": true
                     }
                 },
@@ -1768,6 +2046,48 @@
                 },
                 "type": "object"
             },
+            "GaleriPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Galeri"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Kategori": {
                 "required": [
                     "id",
@@ -1803,6 +2123,48 @@
                     "name": {
                         "type": "string",
                         "example": "Robotika Modern"
+                    }
+                },
+                "type": "object"
+            },
+            "KategoriPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Kategori"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -1940,6 +2302,48 @@
                 },
                 "type": "object"
             },
+            "ProjectPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Project"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Rating": {
                 "properties": {
                     "id": {
@@ -2026,6 +2430,48 @@
                 },
                 "type": "object"
             },
+            "RatingPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Rating"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Tag": {
                 "required": [
                     "id",
@@ -2061,6 +2507,48 @@
                     "name": {
                         "type": "string",
                         "example": "Robotika Modern"
+                    }
+                },
+                "type": "object"
+            },
+            "TagPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Tag"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"
