@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\FileUploadHelper;
 use PDO;
 use PDOException;
 
@@ -20,7 +21,8 @@ class Berita
              FROM berita 
              ORDER BY created_at DESC'
         );
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
     }
 
     public function paginate(int $page = 1, int $perPage = 10): array
@@ -37,7 +39,8 @@ class Berita
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
     }
 
     public function count(): int
@@ -55,7 +58,11 @@ class Berita
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
 
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->transformImageUrl($result);
     }
 
     public function create(string $judul, string $description, string $imageUrl, ?int $idUser = null, string $status = 'published'): array
@@ -73,7 +80,8 @@ class Berita
             'status' => $status,
         ]);
 
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+        return $this->transformImageUrl($result);
     }
 
     public function update(
@@ -100,7 +108,11 @@ class Berita
         ]);
 
         $result = $stmt->fetch();
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->transformImageUrl($result);
     }
 
     public function delete(int $id): bool
@@ -119,6 +131,15 @@ class Berita
              ORDER BY created_at DESC'
         );
         $stmt->execute(['status' => $status]);
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
+    }
+
+    private function transformImageUrl(array $row): array
+    {
+        if (isset($row['image_url'])) {
+            $row['image_url'] = FileUploadHelper::getFullUrl($row['image_url']);
+        }
+        return $row;
     }
 }

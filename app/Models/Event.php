@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\FileUploadHelper;
 use PDO;
 use PDOException;
 
@@ -17,7 +18,8 @@ class Event
     {
         $stmt = $this->db->query('SELECT id, image_url, judul, description, tanggal_event FROM event ORDER BY judul');
 
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
     }
 
     public function paginate(int $page = 1, int $limit = 10): array
@@ -34,7 +36,8 @@ class Event
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
     }
 
     public function count(): int
@@ -49,7 +52,11 @@ class Event
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
 
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->transformImageUrl($result);
     }
 
     public function create(string $judul, ?string $description = null, ?string $imageUrl = null, ?string $tanggalEvent = null): array
@@ -66,7 +73,8 @@ class Event
             'tanggal_event' => $tanggalEvent,
         ]);
 
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+        return $this->transformImageUrl($result);
     }
 
     public function update(int $id, string $judul, ?string $description = null, ?string $imageUrl = null, ?string $tanggalEvent = null): ?array
@@ -87,7 +95,11 @@ class Event
 
         $result = $stmt->fetch();
 
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->transformImageUrl($result);
     }
 
     public function delete(int $id): bool
@@ -125,7 +137,8 @@ class Event
         );
         $stmt->execute(['keyword' => "%{$keyword}%"]);
 
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
     }
 
     public function recent(?int $limit = null): array
@@ -145,6 +158,15 @@ class Event
             $stmt->execute();
         }
 
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformImageUrl'], $results);
+    }
+
+    private function transformImageUrl(array $row): array
+    {
+        if (isset($row['image_url'])) {
+            $row['image_url'] = FileUploadHelper::getFullUrl($row['image_url']);
+        }
+        return $row;
     }
 }

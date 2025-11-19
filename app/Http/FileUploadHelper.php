@@ -114,6 +114,15 @@ class FileUploadHelper
             return true;
         }
 
+        if (preg_match('/^https?:\/\//', $filePath)) {
+            $parsed = parse_url($filePath);
+            $filePath = $parsed['path'] ?? '';
+            
+            if (strpos($filePath, '/uploads/') !== false) {
+                $filePath = substr($filePath, strpos($filePath, '/uploads/'));
+            }
+        }
+
         $filePath = ltrim($filePath, '/');
         
         $fullPath = dirname(__DIR__, 2) . '/public/' . $filePath;
@@ -166,6 +175,46 @@ class FileUploadHelper
         $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
         
         return $filename;
+    }
+
+    /**
+     * Get base URL (host/domain/IP) 
+     */
+    public static function getBaseUrl(): string
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $basePath = dirname($scriptName);
+        
+        if ($basePath === '/') {
+            $basePath = '';
+        }
+        
+        return $protocol . '://' . $host . $basePath;
+    }
+
+    public static function getFullUrl(?string $filePath): ?string
+    {
+        if ($filePath === null || $filePath === '') {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//', $filePath)) {
+            return $filePath;
+        }
+
+        if (strpos($filePath, '/') !== 0) {
+            $filePath = '/' . $filePath;
+        }
+
+        return self::getBaseUrl() . $filePath;
+    }
+
+    public static function getFullUrls(array $filePaths): array
+    {
+        return array_map([self::class, 'getFullUrl'], $filePaths);
     }
 }
 

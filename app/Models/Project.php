@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\FileUploadHelper;
 use PDO;
 use PDOException;
 
@@ -208,6 +209,22 @@ class Project
             }
         } else {
             $row['image_url'] = [];
+        }
+
+        // Transform URLs to include base URL
+        return $this->transformUrls($row);
+    }
+
+    private function transformUrls(array $row): array
+    {
+        // Transform video_url
+        if (isset($row['video_url'])) {
+            $row['video_url'] = FileUploadHelper::getFullUrl($row['video_url']);
+        }
+
+        // Transform image_url array
+        if (isset($row['image_url']) && is_array($row['image_url'])) {
+            $row['image_url'] = FileUploadHelper::getFullUrls($row['image_url']);
         }
 
         return $row;

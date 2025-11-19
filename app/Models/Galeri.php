@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\FileUploadHelper;
 use PDO;
 use PDOException;
 
@@ -20,7 +21,8 @@ class Galeri
              FROM galeri 
              ORDER BY tanggal_kegiatan DESC, created_at DESC'
         );
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformFileUrl'], $results);
     }
 
     public function paginate(int $page = 1, int $limit = 10): array
@@ -37,7 +39,8 @@ class Galeri
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformFileUrl'], $results);
     }
 
     public function count(): int
@@ -54,7 +57,11 @@ class Galeri
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
 
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->transformFileUrl($result);
     }
 
     public function create(string $type, string $fileUrl, ?string $tanggalKegiatan = null): array
@@ -69,7 +76,8 @@ class Galeri
             'tanggal_kegiatan' => $tanggalKegiatan,
         ]);
 
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+        return $this->transformFileUrl($result);
     }
 
     public function update(
@@ -93,7 +101,11 @@ class Galeri
 
         $result = $stmt->fetch();
 
-        return $result ?: null;
+        if ($result === false) {
+            return null;
+        }
+
+        return $this->transformFileUrl($result);
     }
 
     public function delete(int $id): bool
@@ -114,6 +126,15 @@ class Galeri
         );
         $stmt->execute(['type' => $type]);
         
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        return array_map([$this, 'transformFileUrl'], $results);
+    }
+
+    private function transformFileUrl(array $row): array
+    {
+        if (isset($row['file_url'])) {
+            $row['file_url'] = FileUploadHelper::getFullUrl($row['file_url']);
+        }
+        return $row;
     }
 }
