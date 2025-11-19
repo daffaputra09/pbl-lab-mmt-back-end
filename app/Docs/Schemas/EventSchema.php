@@ -13,7 +13,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'judul', type: 'string', example: 'Workshop PHP'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Deskripsi lengkap event'),
-        new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.jpg')
+        new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.jpg'),
+        new OA\Property(property: 'tanggal_event', type: 'string', format: 'date', nullable: true, example: '2024-12-31', description: 'Tanggal pelaksanaan event')
     ]
 )]
 class EventSchema
@@ -27,7 +28,8 @@ class EventSchema
     properties: [
         new OA\Property(property: 'judul', type: 'string', example: 'Webinar Terbaru'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Pembahasan mendalam tentang framework baru'),
-        new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'File gambar event (JPG, PNG, GIF, WEBP, max 5MB)')
+        new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'File gambar event (JPG, PNG, GIF, WEBP, max 5MB)'),
+        new OA\Property(property: 'tanggal_event', type: 'string', format: 'date', nullable: true, example: '2024-12-31', description: 'Tanggal pelaksanaan event (format: YYYY-MM-DD)')
     ]
 )]
 class EventCreateRequest
@@ -40,7 +42,8 @@ class EventCreateRequest
     properties: [
         new OA\Property(property: 'judul', type: 'string', example: 'Webinar Terbaru 2024'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Pembahasan mendalam dan update terkini'),
-        new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar')
+        new OA\Property(property: 'image', type: 'string', format: 'binary', nullable: true, description: 'File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar'),
+        new OA\Property(property: 'tanggal_event', type: 'string', format: 'date', nullable: true, example: '2024-12-31', description: 'Tanggal pelaksanaan event (format: YYYY-MM-DD). Opsional - hanya isi jika ingin mengubah tanggal')
     ]
 )]
 class EventUpdateRequest

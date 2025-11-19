@@ -35,6 +35,8 @@ $router->put('/tag/{id}', [TagController::class, 'update']);
 $router->delete('/tag/{id}', [TagController::class, 'destroy']);
 
 $router->get('/event', [EventController::class, 'index']);
+$router->get('/event/recent', [EventController::class, 'recent']);
+$router->get('/event/recent/{limit}', [EventController::class, 'recentWithLimit']);
 $router->get('/event/{id}', [EventController::class, 'show']);
 $router->post('/event', [EventController::class, 'store']);
 $router->put('/event/{id}', [EventController::class, 'update']);

@@ -502,27 +502,52 @@
                 }
             }
         },
+        "/event/recent": {
+            "get": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Daftar event yang akan datang (belum dilaksanakan)",
+                "operationId": "1f5a3501d55814e28e54d6f2f9a8eb47",
+                "responses": {
+                    "200": {
+                        "description": "Daftar semua event yang tanggal_event nya di atas hari ini",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Event"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/event/recent/{limit}": {
             "get": {
                 "tags": [
                     "Event"
                 ],
-                "summary": "Daftar event terbaru",
-                "operationId": "548a53168d271b7873cbf1420f2b1da1",
+                "summary": "Daftar event yang akan datang dengan limit",
+                "operationId": "f1d28fde92c4a33310d24c03020aec29",
                 "parameters": [
                     {
                         "name": "limit",
                         "in": "path",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "type": "integer",
-                            "default": 5
+                            "minimum": 1,
+                            "example": 5
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daftar event terbaru",
+                        "description": "Daftar event yang tanggal_event nya di atas hari ini (dibatasi jumlahnya)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1865,6 +1890,13 @@
                         "type": "string",
                         "example": "https://example.com/image.jpg",
                         "nullable": true
+                    },
+                    "tanggal_event": {
+                        "description": "Tanggal pelaksanaan event",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-12-31",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -1888,6 +1920,13 @@
                         "type": "string",
                         "format": "binary",
                         "nullable": true
+                    },
+                    "tanggal_event": {
+                        "description": "Tanggal pelaksanaan event (format: YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-12-31",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -1907,6 +1946,13 @@
                         "description": "File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar",
                         "type": "string",
                         "format": "binary",
+                        "nullable": true
+                    },
+                    "tanggal_event": {
+                        "description": "Tanggal pelaksanaan event (format: YYYY-MM-DD). Opsional - hanya isi jika ingin mengubah tanggal",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-12-31",
                         "nullable": true
                     }
                 },

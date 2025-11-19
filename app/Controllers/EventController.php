@@ -134,16 +134,13 @@ class EventController
     }
     
     #[OA\Get(
-        path: '/event/recent/{limit}',
-        summary: 'Daftar event terbaru',
+        path: '/event/recent',
+        summary: 'Daftar event yang akan datang (belum dilaksanakan)',
         tags: ['Event'],
-        parameters: [
-            new OA\Parameter(name: 'limit', in: 'path', required: false, schema: new OA\Schema(type: 'integer', default: 5))
-        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Daftar event terbaru',
+                description: 'Daftar semua event yang tanggal_event nya di atas hari ini',
                 content: new OA\JsonContent(
                     type: 'array',
                     items: new OA\Items(ref: '#/components/schemas/Event')
@@ -151,12 +148,43 @@ class EventController
             )
         ]
     )]
-    public function recent(int $limit = 5): void
+    public function recent(): void
     {
         try {
+            Response::json($this->event->recent(null));
+        } catch (PDOException $exception) {
+            Response::json(['message' => 'Gagal mengambil data event yang akan datang', 'error' => $exception->getMessage()], 500);
+        }
+    }
+
+    #[OA\Get(
+        path: '/event/recent/{limit}',
+        summary: 'Daftar event yang akan datang dengan limit',
+        tags: ['Event'],
+        parameters: [
+            new OA\Parameter(name: 'limit', in: 'path', required: true, schema: new OA\Schema(type: 'integer', minimum: 1, example: 5))
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Daftar event yang tanggal_event nya di atas hari ini (dibatasi jumlahnya)',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Event')
+                )
+            )
+        ]
+    )]
+    public function recentWithLimit(int $limit): void
+    {
+        try {
+            if ($limit < 1) {
+                Response::json(['message' => 'Parameter limit harus lebih besar dari 0'], 400);
+                return;
+            }
             Response::json($this->event->recent($limit));
         } catch (PDOException $exception) {
-            Response::json(['message' => 'Gagal mengambil data event terbaru', 'error' => $exception->getMessage()], 500);
+            Response::json(['message' => 'Gagal mengambil data event yang akan datang', 'error' => $exception->getMessage()], 500);
         }
     }
 
@@ -196,6 +224,7 @@ class EventController
         
         $judul = trim($formData['judul'] ?? '');
         $description = trim($formData['description'] ?? '');
+        $tanggalEvent = isset($formData['tanggal_event']) && $formData['tanggal_event'] !== '' ? trim($formData['tanggal_event']) : null;
 
         if ($judul === '') {
             Response::json(['message' => 'Field judul wajib diisi'], 422);
@@ -220,7 +249,7 @@ class EventController
         }
 
         try {
-            $event = $this->event->create($judul, $description ?: null, $imageUrl);
+            $event = $this->event->create($judul, $description ?: null, $imageUrl, $tanggalEvent);
         } catch (PDOException $exception) {
             // Rollback: hapus file jika gagal insert ke database
             if ($imageUrl) {
@@ -272,6 +301,7 @@ class EventController
 
         $judul = isset($formData['judul']) ? trim($formData['judul']) : $existing['judul'];
         $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
+        $tanggalEvent = isset($formData['tanggal_event']) && $formData['tanggal_event'] !== '' ? trim($formData['tanggal_event']) : ($existing['tanggal_event'] ?? null);
         $imageUrl = $existing['image_url'];
 
         $newImageUrl = null;
@@ -303,7 +333,7 @@ class EventController
         }
 
         try {
-            $event = $this->event->update($id, $judul, $description, $imageUrl);
+            $event = $this->event->update($id, $judul, $description, $imageUrl, $tanggalEvent);
         } catch (PDOException $exception) {
             if ($newImageUrl) {
                 FileUploadHelper::deleteFile($newImageUrl);

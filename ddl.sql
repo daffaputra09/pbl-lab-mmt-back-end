@@ -80,7 +80,8 @@ CREATE TABLE event (
     id SERIAL PRIMARY KEY,
     image_url TEXT,
     judul VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT,
+    tanggal_event DATE
 );
 
 -- Create indexes 

@@ -15,7 +15,7 @@ class Event
 
     public function all(): array
     {
-        $stmt = $this->db->query('SELECT id, image_url, judul, description FROM event ORDER BY judul');
+        $stmt = $this->db->query('SELECT id, image_url, judul, description, tanggal_event FROM event ORDER BY judul');
 
         return $stmt->fetchAll();
     }
@@ -25,7 +25,7 @@ class Event
         $offset = ($page - 1) * $limit;
         
         $stmt = $this->db->prepare(
-            'SELECT id, image_url, judul, description 
+            'SELECT id, image_url, judul, description, tanggal_event 
              FROM event 
              ORDER BY judul
              LIMIT :limit OFFSET :offset'
@@ -45,42 +45,44 @@ class Event
 
     public function find(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT id, image_url, judul, description FROM event WHERE id = :id');
+        $stmt = $this->db->prepare('SELECT id, image_url, judul, description, tanggal_event FROM event WHERE id = :id');
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
 
         return $result ?: null;
     }
 
-    public function create(string $judul, ?string $description = null, ?string $imageUrl = null): array
+    public function create(string $judul, ?string $description = null, ?string $imageUrl = null, ?string $tanggalEvent = null): array
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO event (image_url, judul, description) 
-             VALUES (:image_url, :judul, :description) 
-             RETURNING id, image_url, judul, description'
+            'INSERT INTO event (image_url, judul, description, tanggal_event) 
+             VALUES (:image_url, :judul, :description, :tanggal_event) 
+             RETURNING id, image_url, judul, description, tanggal_event'
         );
         $stmt->execute([
             'image_url' => $imageUrl,
             'judul' => $judul,
             'description' => $description,
+            'tanggal_event' => $tanggalEvent,
         ]);
 
         return $stmt->fetch();
     }
 
-    public function update(int $id, string $judul, ?string $description = null, ?string $imageUrl = null): ?array
+    public function update(int $id, string $judul, ?string $description = null, ?string $imageUrl = null, ?string $tanggalEvent = null): ?array
     {
         $stmt = $this->db->prepare(
             'UPDATE event 
-             SET image_url = :image_url, judul = :judul, description = :description 
+             SET image_url = :image_url, judul = :judul, description = :description, tanggal_event = :tanggal_event 
              WHERE id = :id 
-             RETURNING id, image_url, judul, description'
+             RETURNING id, image_url, judul, description, tanggal_event'
         );
         $stmt->execute([
             'id' => $id,
             'image_url' => $imageUrl,
             'judul' => $judul,
             'description' => $description,
+            'tanggal_event' => $tanggalEvent,
         ]);
 
         $result = $stmt->fetch();
@@ -115,7 +117,7 @@ class Event
     public function search(string $keyword): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, image_url, judul, description 
+            'SELECT id, image_url, judul, description, tanggal_event 
              FROM event 
              WHERE LOWER(judul) LIKE LOWER(:keyword) 
                 OR LOWER(description) LIKE LOWER(:keyword)
@@ -126,16 +128,22 @@ class Event
         return $stmt->fetchAll();
     }
 
-    public function recent(int $limit = 5): array
+    public function recent(?int $limit = null): array
     {
-        $stmt = $this->db->prepare(
-            'SELECT id, image_url, judul, description 
-             FROM event 
-             ORDER BY id DESC 
-             LIMIT :limit'
-        );
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $query = 'SELECT id, image_url, judul, description, tanggal_event 
+                  FROM event 
+                  WHERE tanggal_event > CURRENT_DATE 
+                  ORDER BY tanggal_event ASC, id DESC';
+        
+        if ($limit !== null) {
+            $query .= ' LIMIT :limit';
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+        }
 
         return $stmt->fetchAll();
     }
