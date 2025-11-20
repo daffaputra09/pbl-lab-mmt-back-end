@@ -233,10 +233,11 @@ class BeritaController
         }
 
         try {
+            $imageUrl = FileUploadHelper::getRelativePath($data['image_url']);
             $entry = $this->berita->create(
                 $data['judul'],
                 $data['description'],
-                $data['image_url'],
+                $imageUrl,
                 $data['id_user'] ?? null,
                 $data['status'] ?? 'published'
             );
@@ -317,7 +318,7 @@ class BeritaController
                 ? (int) $formData['id_user']
                 : $existing['id_user'];
             $status = $formData['status'] ?? $existing['status'];
-            $imageUrl = $existing['image_url'];
+            $imageUrl = FileUploadHelper::getRelativePath($existing['image_url']);
 
             $newImageUrl = null;
             if (Request::hasFile('image')) {
@@ -391,7 +392,9 @@ class BeritaController
 
         $judul = $data['judul'] ?? $existing['judul'];
         $description = $data['description'] ?? $existing['description'];
-        $imageUrl = $data['image_url'] ?? $existing['image_url'];
+        $imageUrl = isset($data['image_url']) 
+            ? FileUploadHelper::getRelativePath($data['image_url']) 
+            : FileUploadHelper::getRelativePath($existing['image_url']);
         $idUser = $data['id_user'] ?? $existing['id_user'];
         $status = $data['status'] ?? $existing['status'];
 

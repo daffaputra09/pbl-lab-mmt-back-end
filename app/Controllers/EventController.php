@@ -302,7 +302,7 @@ class EventController
         $judul = isset($formData['judul']) ? trim($formData['judul']) : $existing['judul'];
         $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
         $tanggalEvent = isset($formData['tanggal_event']) && $formData['tanggal_event'] !== '' ? trim($formData['tanggal_event']) : ($existing['tanggal_event'] ?? null);
-        $imageUrl = $existing['image_url'];
+        $imageUrl = FileUploadHelper::getRelativePath($existing['image_url']);
 
         $newImageUrl = null;
         if (Request::hasFile('image')) {

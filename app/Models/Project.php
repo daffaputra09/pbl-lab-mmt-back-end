@@ -14,68 +14,155 @@ class Project
     {
     }
 
-    public function all(?int $idKategori = null): array
+    public function all(?int $idKategori = null, ?array $tagNames = null, ?string $searchName = null): array
     {
+        $query = 'SELECT DISTINCT p.id, p.name, p.description, p.id_kategori, p.video_url, p.image_url, p.status, p.created_at 
+                  FROM project p';
+        $conditions = [];
+        $params = [];
+
         if ($idKategori) {
-            $stmt = $this->db->prepare(
-                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
-                FROM project 
-                WHERE id_kategori = :id_kategori 
-                ORDER BY created_at DESC'
-            );
-            $stmt->execute(['id_kategori' => $idKategori]);
+            $conditions[] = 'p.id_kategori = :id_kategori';
+            $params['id_kategori'] = $idKategori;
+        }
+
+        if (!empty($tagNames)) {
+            $query .= ' INNER JOIN project_tag pt ON p.id = pt.id_project 
+                       INNER JOIN tag t ON pt.id_tag = t.id';
+            $placeholders = [];
+            foreach ($tagNames as $index => $tagName) {
+                $key = 'tag_name_' . $index;
+                $placeholders[] = 'LOWER(t.name) = LOWER(:' . $key . ')';
+                $params[$key] = trim($tagName);
+            }
+            $conditions[] = '(' . implode(' OR ', $placeholders) . ')';
+        }
+
+        if ($searchName !== null && $searchName !== '') {
+            $conditions[] = 'LOWER(p.name) LIKE LOWER(:search_name)';
+            $params['search_name'] = '%' . trim($searchName) . '%';
+        }
+
+        if (!empty($conditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $query .= ' ORDER BY p.created_at DESC';
+
+        if (empty($params)) {
+            $stmt = $this->db->query($query);
         } else {
-            $stmt = $this->db->query(
-                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
-                FROM project 
-                ORDER BY created_at DESC'
-            );
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
         }
 
         $results = $stmt->fetchAll();
-        return array_map([$this, 'parseImageUrl'], $results);
+        $results = array_map([$this, 'parseImageUrl'], $results);
+        return array_map(function($row) {
+            $row['tags'] = $this->getTags($row['id']);
+            $kategori = $this->getKategori($row['id_kategori']);
+            $row['kategori'] = $kategori ?: ['id' => $row['id_kategori'], 'name' => null];
+            return $row;
+        }, $results);
     }
 
-    public function paginate(int $page = 1, int $limit = 10, ?int $idKategori = null): array
+    public function paginate(int $page = 1, int $limit = 10, ?int $idKategori = null, ?array $tagNames = null, ?string $searchName = null): array
     {
         $offset = ($page - 1) * $limit;
         
+        $query = 'SELECT DISTINCT p.id, p.name, p.description, p.id_kategori, p.video_url, p.image_url, p.status, p.created_at 
+                  FROM project p';
+        $conditions = [];
+        $params = [];
+
         if ($idKategori) {
-            $stmt = $this->db->prepare(
-                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
-                FROM project 
-                WHERE id_kategori = :id_kategori 
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset'
-            );
-            $stmt->bindValue(':id_kategori', $idKategori, \PDO::PARAM_INT);
-            $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-            $stmt->execute();
-        } else {
-            $stmt = $this->db->prepare(
-                'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
-                FROM project 
-                ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset'
-            );
-            $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-            $stmt->execute();
+            $conditions[] = 'p.id_kategori = :id_kategori';
+            $params['id_kategori'] = $idKategori;
         }
+
+        if (!empty($tagNames)) {
+            $query .= ' INNER JOIN project_tag pt ON p.id = pt.id_project 
+                       INNER JOIN tag t ON pt.id_tag = t.id';
+            $placeholders = [];
+            foreach ($tagNames as $index => $tagName) {
+                $key = 'tag_name_' . $index;
+                $placeholders[] = 'LOWER(t.name) = LOWER(:' . $key . ')';
+                $params[$key] = trim($tagName);
+            }
+            $conditions[] = '(' . implode(' OR ', $placeholders) . ')';
+        }
+
+        if ($searchName !== null && $searchName !== '') {
+            $conditions[] = 'LOWER(p.name) LIKE LOWER(:search_name)';
+            $params['search_name'] = '%' . trim($searchName) . '%';
+        }
+
+        if (!empty($conditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $query .= ' ORDER BY p.created_at DESC LIMIT :limit OFFSET :offset';
+        
+        $stmt = $this->db->prepare($query);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value, \PDO::PARAM_STR);
+        }
+        
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        
+        $stmt->execute();
 
         $results = $stmt->fetchAll();
-        return array_map([$this, 'parseImageUrl'], $results);
+        $results = array_map([$this, 'parseImageUrl'], $results);
+        return array_map(function($row) {
+            $row['tags'] = $this->getTags($row['id']);
+            $kategori = $this->getKategori($row['id_kategori']);
+            $row['kategori'] = $kategori ?: ['id' => $row['id_kategori'], 'name' => null];
+            return $row;
+        }, $results);
     }
 
-    public function count(?int $idKategori = null): int
+    public function count(?int $idKategori = null, ?array $tagNames = null, ?string $searchName = null): int
     {
+        $query = 'SELECT COUNT(DISTINCT p.id) FROM project p';
+        $conditions = [];
+        $params = [];
+
         if ($idKategori) {
-            $stmt = $this->db->prepare('SELECT COUNT(*) FROM project WHERE id_kategori = :id_kategori');
-            $stmt->execute(['id_kategori' => $idKategori]);
-        } else {
-            $stmt = $this->db->query('SELECT COUNT(*) FROM project');
+            $conditions[] = 'p.id_kategori = :id_kategori';
+            $params['id_kategori'] = $idKategori;
         }
+
+        if (!empty($tagNames)) {
+            $query .= ' INNER JOIN project_tag pt ON p.id = pt.id_project 
+                       INNER JOIN tag t ON pt.id_tag = t.id';
+            $placeholders = [];
+            foreach ($tagNames as $index => $tagName) {
+                $key = 'tag_name_' . $index;
+                $placeholders[] = 'LOWER(t.name) = LOWER(:' . $key . ')';
+                $params[$key] = trim($tagName);
+            }
+            $conditions[] = '(' . implode(' OR ', $placeholders) . ')';
+        }
+
+        if ($searchName !== null && $searchName !== '') {
+            $conditions[] = 'LOWER(p.name) LIKE LOWER(:search_name)';
+            $params['search_name'] = '%' . trim($searchName) . '%';
+        }
+
+        if (!empty($conditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        if (empty($params)) {
+            $stmt = $this->db->query($query);
+        } else {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        }
+
         return (int) $stmt->fetchColumn();
     }
 
@@ -93,7 +180,50 @@ class Project
             return null;
         }
 
-        return $this->parseImageUrl($result);
+        $result = $this->parseImageUrl($result);
+        $result['tags'] = $this->getTags($id);
+        $kategori = $this->getKategori($result['id_kategori']);
+        $result['kategori'] = $kategori ?: ['id' => $result['id_kategori'], 'name' => null];
+        return $result;
+    }
+
+    public function getTags(int $projectId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT t.id, t.name 
+             FROM tag t 
+             INNER JOIN project_tag pt ON t.id = pt.id_tag 
+             WHERE pt.id_project = :project_id 
+             ORDER BY t.name'
+        );
+        $stmt->execute(['project_id' => $projectId]);
+        return $stmt->fetchAll();
+    }
+
+    public function getKategori(int $kategoriId): ?array
+    {
+        $stmt = $this->db->prepare('SELECT id, name FROM kategori WHERE id = :id');
+        $stmt->execute(['id' => $kategoriId]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    public function syncTags(int $projectId, array $tagIds): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM project_tag WHERE id_project = :project_id');
+        $stmt->execute(['project_id' => $projectId]);
+
+        if (!empty($tagIds)) {
+            $stmt = $this->db->prepare(
+                'INSERT INTO project_tag (id_project, id_tag) VALUES (:project_id, :tag_id)'
+            );
+            foreach ($tagIds as $tagId) {
+                $stmt->execute([
+                    'project_id' => $projectId,
+                    'tag_id' => (int) $tagId,
+                ]);
+            }
+        }
     }
 
     public function create(
@@ -102,7 +232,8 @@ class Project
         int $idKategori,
         ?string $videoUrl,
         array $imageUrls,
-        string $status = 'active'
+        string $status = 'on_progress',
+        array $tagIds = []
     ): array {
         // Convert imageUrls array into a Postgres array literal (if using Postgres)
         $imageUrlsSql = '{' . implode(',', array_map(fn($u) => '"' . $u . '"', $imageUrls)) . '}';
@@ -122,7 +253,15 @@ class Project
         ]);
 
         $result = $stmt->fetch();
-        return $this->parseImageUrl($result);
+        $result = $this->parseImageUrl($result);
+        
+        $this->syncTags($result['id'], $tagIds);
+        $result['tags'] = $this->getTags($result['id']);
+        
+        $kategori = $this->getKategori($result['id_kategori']);
+        $result['kategori'] = $kategori ?: ['id' => $result['id_kategori'], 'name' => null];
+        
+        return $result;
     }
 
     public function update(
@@ -132,7 +271,8 @@ class Project
         int $idKategori,
         ?string $videoUrl,
         array $imageUrls,
-        string $status
+        string $status,
+        array $tagIds = []
     ): ?array {
         $imageUrlsSql = '{' . implode(',', array_map(fn($u) => '"' . $u . '"', $imageUrls)) . '}';
 
@@ -162,7 +302,15 @@ class Project
             return null;
         }
 
-        return $this->parseImageUrl($result);
+        $result = $this->parseImageUrl($result);
+        
+        $this->syncTags($id, $tagIds);
+        $result['tags'] = $this->getTags($id);
+        
+        $kategori = $this->getKategori($result['id_kategori']);
+        $result['kategori'] = $kategori ?: ['id' => $result['id_kategori'], 'name' => null];
+        
+        return $result;
     }
 
     public function delete(int $id): bool
@@ -182,7 +330,13 @@ class Project
         );
         $stmt->execute(['status' => $status]);
         $results = $stmt->fetchAll();
-        return array_map([$this, 'parseImageUrl'], $results);
+        $results = array_map([$this, 'parseImageUrl'], $results);
+        return array_map(function($row) {
+            $row['tags'] = $this->getTags($row['id']);
+            $kategori = $this->getKategori($row['id_kategori']);
+            $row['kategori'] = $kategori ?: ['id' => $row['id_kategori'], 'name' => null];
+            return $row;
+        }, $results);
     }
 
     private function parseImageUrl(array $row): array

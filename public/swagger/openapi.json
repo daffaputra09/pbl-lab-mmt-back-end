@@ -1030,7 +1030,7 @@
                 "tags": [
                     "Project"
                 ],
-                "summary": "List semua entri proyek dengan pagination (dapat difilter berdasarkan id_kategori)",
+                "summary": "List semua entri proyek dengan pagination (dapat difilter berdasarkan id_kategori, tag_names, dan search by name)",
                 "operationId": "6bae3ddb0e80f384ea2a398e5e719c36",
                 "parameters": [
                     {
@@ -1064,6 +1064,34 @@
                         "schema": {
                             "type": "integer",
                             "example": 3
+                        }
+                    },
+                    {
+                        "name": "tag_names",
+                        "in": "query",
+                        "description": "Filter proyek berdasarkan tag names (multiple, OR logic). Bisa berupa array atau string yang dipisahkan koma. Contoh: \"tag_names[]=Web Development&tag_names[]=PHP\" atau \"tag_names=Web Development,PHP\"",
+                        "required": false,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "example": [
+                                "Web Development",
+                                "PHP"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search project berdasarkan nama (case-insensitive, partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Website"
                         }
                     }
                 ],
@@ -2230,8 +2258,23 @@
                         "example": "Deskripsi detail proyek pengembangan website sekolah\u2026"
                     },
                     "id_kategori": {
+                        "description": "ID kategori (deprecated, gunakan kategori object)",
                         "type": "integer",
                         "example": 3
+                    },
+                    "kategori": {
+                        "description": "Object kategori yang berisi id dan name",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Robotika"
+                            }
+                        },
+                        "type": "object"
                     },
                     "video_url": {
                         "type": "string",
@@ -2248,16 +2291,22 @@
                     "status": {
                         "type": "string",
                         "enum": [
-                            "active",
-                            "inactive",
+                            "on_progress",
                             "completed"
                         ],
-                        "example": "active"
+                        "example": "on_progress"
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-11-12T09:30:00Z"
+                    },
+                    "tags": {
+                        "description": "Daftar tag yang terkait dengan project ini (berisi id dan name)",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Tag"
+                        }
                     }
                 },
                 "type": "object"
@@ -2265,7 +2314,8 @@
             "ProjectCreateRequest": {
                 "required": [
                     "name",
-                    "id_kategori"
+                    "id_kategori",
+                    "tag_ids"
                 ],
                 "properties": {
                     "name": {
@@ -2279,6 +2329,18 @@
                     "id_kategori": {
                         "type": "integer",
                         "example": 3
+                    },
+                    "tag_ids": {
+                        "description": "Array of tag IDs yang wajib diisi. Minimal 1 tag harus dipilih. Untuk multipart/form-data, gunakan field name \"tag_ids[]\" atau kirim sebagai array.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
                     },
                     "video": {
                         "description": "File video project (MP4, MPEG, MOV, AVI, max 100MB). Opsional - upload video project.",
@@ -2298,16 +2360,18 @@
                     "status": {
                         "type": "string",
                         "enum": [
-                            "active",
-                            "inactive",
+                            "on_progress",
                             "completed"
                         ],
-                        "example": "active"
+                        "example": "on_progress"
                     }
                 },
                 "type": "object"
             },
             "ProjectUpdateRequest": {
+                "required": [
+                    "tag_ids"
+                ],
                 "properties": {
                     "name": {
                         "type": "string",
@@ -2320,6 +2384,18 @@
                     "id_kategori": {
                         "type": "integer",
                         "example": 4
+                    },
+                    "tag_ids": {
+                        "description": "Array of tag IDs yang wajib diisi. Minimal 1 tag harus dipilih. Untuk multipart/form-data, gunakan field name \"tag_ids[]\" atau kirim sebagai array.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
                     },
                     "video": {
                         "description": "File video project (MP4, MPEG, MOV, AVI, max 100MB). Opsional - kirim hanya jika ingin mengubah video. Video lama akan otomatis terhapus.",
@@ -2339,8 +2415,7 @@
                     "status": {
                         "type": "string",
                         "enum": [
-                            "active",
-                            "inactive",
+                            "on_progress",
                             "completed"
                         ],
                         "example": "completed"

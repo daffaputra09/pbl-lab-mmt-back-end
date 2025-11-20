@@ -8,6 +8,7 @@ use App\Http\Request;
 use App\Http\Response;
 use App\Http\FileUploadHelper;
 use App\Models\Project;
+use App\Models\Tag;
 use Config\Database;
 use InvalidArgumentException;
 use OpenApi\Attributes as OA;
@@ -17,16 +18,18 @@ use PDOException;
 class ProjectController
 {
     private Project $project;
+    private Tag $tag;
 
     public function __construct()
     {
         $connection = (new Database())->getConnection();
         $this->project = new Project($connection);
+        $this->tag = new Tag($connection);
     }
 
     #[OA\Get(
         path: '/project',
-        summary: 'List semua entri proyek dengan pagination (dapat difilter berdasarkan id_kategori)',
+        summary: 'List semua entri proyek dengan pagination (dapat difilter berdasarkan id_kategori, tag_names, dan search by name)',
         tags: ['Project'],
         parameters: [
             new OA\Parameter(
@@ -49,6 +52,26 @@ class ProjectController
                 required: false,
                 description: 'Filter proyek berdasarkan id_kategori',
                 schema: new OA\Schema(type: 'integer', example: 3)
+            ),
+            new OA\Parameter(
+                name: 'tag_names',
+                in: 'query',
+                required: false,
+                description: 'Filter proyek berdasarkan tag names (multiple, OR logic). Bisa berupa array atau string yang dipisahkan koma. Contoh: "tag_names[]=Web Development&tag_names[]=PHP" atau "tag_names=Web Development,PHP"',
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string'),
+                    example: ['Web Development', 'PHP']
+                ),
+                style: 'form',
+                explode: true
+            ),
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                required: false,
+                description: 'Search project berdasarkan nama (case-insensitive, partial match)',
+                schema: new OA\Schema(type: 'string', example: 'Website')
             )
         ],
         responses: [
@@ -69,6 +92,58 @@ class ProjectController
             $limitParam = Request::getQuery('limit', null);
             $limit = $limitParam !== null ? (int) $limitParam : null;
             $idKategori = isset($_GET['id_kategori']) ? (int) $_GET['id_kategori'] : null;
+            $searchName = Request::getQuery('search', null);
+            if ($searchName !== null && $searchName !== '') {
+                $searchName = trim($searchName);
+            } else {
+                $searchName = null;
+            }
+            
+            $tagNames = [];
+
+            if (isset($_SERVER['QUERY_STRING'])) {
+                $queryString = $_SERVER['QUERY_STRING'];
+                preg_match_all('/tag_names(?:\[\])?=([^&]*)/', $queryString, $matches);
+                if (!empty($matches[1])) {
+                    foreach ($matches[1] as $match) {
+                        $decoded = urldecode($match);
+                        if ($decoded !== '') {
+                            $values = explode(',', $decoded);
+                            foreach ($values as $value) {
+                                $trimmed = trim($value);
+                                if ($trimmed !== '') {
+                                    $tagNames[] = $trimmed;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (empty($tagNames) && isset($_SERVER['QUERY_STRING'])) {
+                parse_str($_SERVER['QUERY_STRING'], $queryParams);
+                if (isset($queryParams['tag_names'])) {
+                    if (is_array($queryParams['tag_names'])) {
+                        $tagNames = array_map('trim', $queryParams['tag_names']);
+                        $tagNames = array_filter($tagNames);
+                    } elseif (is_string($queryParams['tag_names']) && $queryParams['tag_names'] !== '') {
+                        $tagNames = array_map('trim', explode(',', $queryParams['tag_names']));
+                        $tagNames = array_filter($tagNames);
+                    }
+                }
+            }
+            
+            if (empty($tagNames) && isset($_GET['tag_names'])) {
+                if (is_array($_GET['tag_names'])) {
+                    $tagNames = array_map('trim', $_GET['tag_names']);
+                    $tagNames = array_filter($tagNames);
+                } elseif (is_string($_GET['tag_names']) && $_GET['tag_names'] !== '') {
+                    $tagNames = array_map('trim', explode(',', $_GET['tag_names']));
+                    $tagNames = array_filter($tagNames);
+                }
+            }
+            
+            $tagNames = array_values(array_unique($tagNames)); 
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -80,10 +155,10 @@ class ProjectController
                 return;
             }
 
-            $total = $this->project->count($idKategori);
+            $total = $this->project->count($idKategori, !empty($tagNames) ? $tagNames : null, $searchName);
 
             if ($limit === null) {
-                $data = $this->project->all($idKategori);
+                $data = $this->project->all($idKategori, !empty($tagNames) ? $tagNames : null, $searchName);
                 Response::json([
                     'data' => $data,
                     'pagination' => null
@@ -92,7 +167,7 @@ class ProjectController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->project->paginate($page, $limit, $idKategori);
+            $data = $this->project->paginate($page, $limit, $idKategori, !empty($tagNames) ? $tagNames : null, $searchName);
 
             Response::json([
                 'data' => $data,
@@ -177,7 +252,16 @@ class ProjectController
             $name = trim($formData['name'] ?? '');
             $description = trim($formData['description'] ?? '');
             $idKategori = isset($formData['id_kategori']) ? (int) $formData['id_kategori'] : 0;
-            $status = $formData['status'] ?? 'active';
+            $status = $formData['status'] ?? 'on_progress';
+            
+            $tagIds = [];
+            if (isset($formData['tag_ids'])) {
+                if (is_array($formData['tag_ids'])) {
+                    $tagIds = array_map('intval', $formData['tag_ids']);
+                } elseif (is_string($formData['tag_ids'])) {
+                    $tagIds = array_map('intval', explode(',', $formData['tag_ids']));
+                }
+            }
 
             if ($name === '') {
                 Response::json(['message' => 'Kolom name wajib diisi.'], 422);
@@ -186,6 +270,22 @@ class ProjectController
 
             if ($idKategori === 0) {
                 Response::json(['message' => 'Kolom id_kategori wajib diisi.'], 422);
+                return;
+            }
+
+            if (!in_array($status, ['on_progress', 'completed'], true)) {
+                Response::json(['message' => 'Status harus "on_progress" atau "completed".'], 422);
+                return;
+            }
+
+            if (empty($tagIds)) {
+                Response::json(['message' => 'Kolom tag_ids wajib diisi dan harus berupa array tag id.'], 422);
+                return;
+            }
+
+            $invalidTagIds = $this->validateTagIds($tagIds);
+            if (!empty($invalidTagIds)) {
+                Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
                 return;
             }
 
@@ -249,7 +349,8 @@ class ProjectController
                     $idKategori,
                     $videoUrl,
                     $imageUrls,
-                    $status
+                    $status,
+                    $tagIds
                 );
             } catch (PDOException $exception) {
                 foreach ($imageUrls as $imageUrl) {
@@ -274,14 +375,31 @@ class ProjectController
             return;
         }
 
+        $tagIds = $data['tag_ids'] ?? [];
+        if (empty($tagIds)) {
+            Response::json(['message' => 'Kolom tag_ids wajib diisi dan harus berupa array tag id.'], 422);
+            return;
+        }
+
+        $invalidTagIds = $this->validateTagIds($tagIds);
+        if (!empty($invalidTagIds)) {
+            Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
+            return;
+        }
+
         try {
+            $videoUrl = isset($data['video_url']) ? FileUploadHelper::getRelativePath($data['video_url']) : null;
+            $imageUrls = isset($data['image_url']) && is_array($data['image_url']) 
+                ? FileUploadHelper::getRelativePaths($data['image_url']) 
+                : [];
             $entry = $this->project->create(
                 $data['name'],
                 $data['description'],
                 $data['id_kategori'],
-                $data['video_url'] ?? null,
-                $data['image_url'] ?? [],
-                $data['status'] ?? 'active'
+                $videoUrl,
+                $imageUrls,
+                $data['status'] ?? 'on_progress',
+                $tagIds
             );
         } catch (PDOException $ex) {
             Response::json(['message' => 'Gagal membuat entri proyek', 'error' => $ex->getMessage()], 500);
@@ -356,8 +474,33 @@ class ProjectController
             $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
             $idKategori = isset($formData['id_kategori']) ? (int) $formData['id_kategori'] : $existing['id_kategori'];
             $status = isset($formData['status']) ? $formData['status'] : $existing['status'];
-            $videoUrl = $existing['video_url'];
-            $imageUrls = is_array($existing['image_url']) ? $existing['image_url'] : [];
+            $videoUrl = FileUploadHelper::getRelativePath($existing['video_url']);
+            $imageUrls = is_array($existing['image_url']) ? FileUploadHelper::getRelativePaths($existing['image_url']) : [];
+            
+            $tagIds = [];
+            if (isset($formData['tag_ids'])) {
+                if (is_array($formData['tag_ids'])) {
+                    $tagIds = array_map('intval', $formData['tag_ids']);
+                } elseif (is_string($formData['tag_ids'])) {
+                    $tagIds = array_map('intval', explode(',', $formData['tag_ids']));
+                }
+            }
+
+            if (empty($tagIds)) {
+                Response::json(['message' => 'Kolom tag_ids wajib diisi dan harus berupa array tag id.'], 422);
+                return;
+            }
+
+            $invalidTagIds = $this->validateTagIds($tagIds);
+            if (!empty($invalidTagIds)) {
+                Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
+                return;
+            }
+
+            if (!in_array($status, ['on_progress', 'completed'], true)) {
+                Response::json(['message' => 'Status harus "on_progress" atau "completed".'], 422);
+                return;
+            }
 
             $newVideoUrl = null;
             if (Request::hasFile('video')) {
@@ -410,7 +553,8 @@ class ProjectController
                     $idKategori,
                     $videoUrl,
                     $imageUrls,
-                    $status
+                    $status,
+                    $tagIds
                 );
             } catch (PDOException $exception) {
                 foreach ($newImageUrls as $imageUrl) {
@@ -448,15 +592,33 @@ class ProjectController
             return;
         }
 
+        $tagIds = $data['tag_ids'] ?? [];
+        if (empty($tagIds)) {
+            Response::json(['message' => 'Kolom tag_ids wajib diisi dan harus berupa array tag id.'], 422);
+            return;
+        }
+
+        $invalidTagIds = $this->validateTagIds($tagIds);
+        if (!empty($invalidTagIds)) {
+            Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
+            return;
+        }
+
         try {
+            $videoUrl = isset($data['video_url']) ? FileUploadHelper::getRelativePath($data['video_url']) : FileUploadHelper::getRelativePath($existing['video_url']);
+            $imageUrls = isset($data['image_url']) && is_array($data['image_url']) 
+                ? FileUploadHelper::getRelativePaths($data['image_url']) 
+                : FileUploadHelper::getRelativePaths($existing['image_url'] ?? []);
+            
             $entry = $this->project->update(
                 $id,
                 $data['name'] ?? $existing['name'],
                 $data['description'] ?? $existing['description'],
                 $data['id_kategori'] ?? $existing['id_kategori'],
-                $data['video_url'] ?? $existing['video_url'],
-                $data['image_url'] ?? $existing['image_url'],
-                $data['status'] ?? $existing['status']
+                $videoUrl,
+                $imageUrls,
+                $data['status'] ?? $existing['status'],
+                $tagIds
             );
         } catch (PDOException $ex) {
             Response::json(['message' => 'Gagal memperbarui entri proyek', 'error' => $ex->getMessage()], 500);
@@ -527,7 +689,18 @@ class ProjectController
             }
         }
 
-        // Optional fields: description, video_url, image_url, status
+        $tagIds = [];
+        if (isset($payload['tag_ids'])) {
+            if (is_array($payload['tag_ids'])) {
+                $tagIds = array_map('intval', $payload['tag_ids']);
+            }
+        }
+
+        $status = $payload['status'] ?? 'on_progress';
+        if (!in_array($status, ['on_progress', 'completed'], true)) {
+            throw new InvalidArgumentException('Status harus "on_progress" atau "completed".');
+        }
+
 
         return [
             'name'       => $payload['name'] ?? null,
@@ -535,7 +708,20 @@ class ProjectController
             'id_kategori'=> (int) ($payload['id_kategori'] ?? 0),
             'video_url'  => $payload['video_url'] ?? null,
             'image_url'  => $payload['image_url'] ?? [],
-            'status'     => $payload['status'] ?? 'active',
+            'status'     => $status,
+            'tag_ids'    => $tagIds,
         ];
+    }
+
+    private function validateTagIds(array $tagIds): array
+    {
+        $invalidTagIds = [];
+        foreach ($tagIds as $tagId) {
+            $tag = $this->tag->find((int) $tagId);
+            if ($tag === null) {
+                $invalidTagIds[] = $tagId;
+            }
+        }
+        return $invalidTagIds;
     }
 }

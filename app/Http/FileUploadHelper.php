@@ -223,5 +223,30 @@ class FileUploadHelper
     {
         return array_map([self::class, 'getFullUrl'], $filePaths);
     }
+
+    public static function getRelativePath(?string $filePath): ?string
+    {
+        if ($filePath === null || $filePath === '') {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//', $filePath)) {
+            $parsed = parse_url($filePath);
+            $filePath = $parsed['path'] ?? '';
+        }
+
+        $filePath = str_replace('\\', '/', $filePath);
+        
+        if (strpos($filePath, '/') !== 0) {
+            $filePath = '/' . $filePath;
+        }
+
+        return $filePath;
+    }
+
+    public static function getRelativePaths(array $filePaths): array
+    {
+        return array_map([self::class, 'getRelativePath'], $filePaths);
+    }
 }
 

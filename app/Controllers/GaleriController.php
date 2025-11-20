@@ -293,9 +293,10 @@ class GaleriController
         }
 
         try {
+            $fileUrl = FileUploadHelper::getRelativePath($data['file_url']);
             $entry = $this->galeri->create(
                 $data['type'],
-                $data['file_url'],
+                $fileUrl,
                 $data['tanggal_kegiatan']
             );
         } catch (PDOException $exception) {
@@ -371,7 +372,7 @@ class GaleriController
 
             $type = isset($formData['type']) ? trim($formData['type']) : $existing['type'];
             $tanggalKegiatan = isset($formData['tanggal_kegiatan']) ? trim($formData['tanggal_kegiatan']) : $existing['tanggal_kegiatan'];
-            $fileUrl = $existing['file_url'];
+            $fileUrl = FileUploadHelper::getRelativePath($existing['file_url']);
 
             if ($type === '') {
                 $type = $existing['type'];
@@ -456,7 +457,9 @@ class GaleriController
         }
         
         $type = $data['type'] ?? $existing['type'];
-        $fileUrl = $data['file_url'] ?? $existing['file_url'];
+        $fileUrl = isset($data['file_url']) 
+            ? FileUploadHelper::getRelativePath($data['file_url']) 
+            : FileUploadHelper::getRelativePath($existing['file_url']);
         $tanggalKegiatan = $data['tanggal_kegiatan'] ?? $existing['tanggal_kegiatan'];
 
         if ($type === null || $fileUrl === null) {
