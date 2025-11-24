@@ -13,26 +13,50 @@ class Rating
     {
     }
 
-    public function all(): array
+    public function all(?int $projectId = null): array
     {
-        $stmt = $this->db->query(
-            'SELECT id, id_project, name, rating, comment, created_at
-             FROM rating
-             ORDER BY created_at DESC'
-        );
+        $query = 'SELECT id, id_project, name, rating, comment, created_at
+                  FROM rating';
+        $params = [];
+
+        if ($projectId !== null) {
+            $query .= ' WHERE id_project = :id_project';
+            $params['id_project'] = $projectId;
+        }
+
+        $query .= ' ORDER BY created_at DESC';
+
+        if (empty($params)) {
+            $stmt = $this->db->query($query);
+        } else {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        }
+
         return $stmt->fetchAll();
     }
 
-    public function paginate(int $page = 1, int $limit = 10): array
+    public function paginate(int $page = 1, int $limit = 10, ?int $projectId = null): array
     {
         $offset = ($page - 1) * $limit;
         
-        $stmt = $this->db->prepare(
-            'SELECT id, id_project, name, rating, comment, created_at
-             FROM rating
-             ORDER BY created_at DESC
-             LIMIT :limit OFFSET :offset'
-        );
+        $query = 'SELECT id, id_project, name, rating, comment, created_at
+                  FROM rating';
+        $params = [];
+
+        if ($projectId !== null) {
+            $query .= ' WHERE id_project = :id_project';
+            $params['id_project'] = $projectId;
+        }
+
+        $query .= ' ORDER BY created_at DESC LIMIT :limit OFFSET :offset';
+        
+        $stmt = $this->db->prepare($query);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value, \PDO::PARAM_INT);
+        }
+        
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -40,9 +64,23 @@ class Rating
         return $stmt->fetchAll();
     }
 
-    public function count(): int
+    public function count(?int $projectId = null): int
     {
-        $stmt = $this->db->query('SELECT COUNT(*) FROM rating');
+        $query = 'SELECT COUNT(*) FROM rating';
+        $params = [];
+
+        if ($projectId !== null) {
+            $query .= ' WHERE id_project = :id_project';
+            $params['id_project'] = $projectId;
+        }
+
+        if (empty($params)) {
+            $stmt = $this->db->query($query);
+        } else {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        }
+
         return (int) $stmt->fetchColumn();
     }
 

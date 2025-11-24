@@ -1304,7 +1304,7 @@
                 "tags": [
                     "Rating"
                 ],
-                "summary": "List semua entri rating dengan pagination",
+                "summary": "List semua entri rating dengan pagination (dapat difilter berdasarkan project_id)",
                 "operationId": "e7d48a7919923653937780e4ac16ac4d",
                 "parameters": [
                     {
@@ -1328,6 +1328,17 @@
                             "type": "integer",
                             "minimum": 1,
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "description": "Filter rating berdasarkan project_id. Jika diisi, hanya akan mengembalikan rating untuk project dengan id yang sesuai.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 1
                         }
                     }
                 ],
@@ -2466,31 +2477,38 @@
                 "type": "object"
             },
             "Rating": {
+                "description": "Schema untuk entri rating",
                 "properties": {
                     "id": {
+                        "description": "ID unik dari rating",
                         "type": "integer",
                         "example": 1
                     },
                     "id_project": {
+                        "description": "ID project yang diberi rating",
                         "type": "integer",
                         "example": 1
                     },
                     "name": {
+                        "description": "Nama pemberi rating",
                         "type": "string",
                         "example": "John Doe"
                     },
                     "rating": {
+                        "description": "Nilai rating (1-5)",
                         "type": "integer",
                         "maximum": 5,
                         "minimum": 1,
                         "example": 4
                     },
                     "comment": {
+                        "description": "Komentar dari pemberi rating",
                         "type": "string",
                         "example": "Great project!",
                         "nullable": true
                     },
                     "created_at": {
+                        "description": "Waktu rating dibuat",
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-11-12T08:00:00Z"
@@ -2499,6 +2517,7 @@
                 "type": "object"
             },
             "RatingCreateRequest": {
+                "description": "Schema untuk request membuat rating baru",
                 "required": [
                     "id_project",
                     "name",
@@ -2506,20 +2525,24 @@
                 ],
                 "properties": {
                     "id_project": {
+                        "description": "ID project yang akan diberi rating",
                         "type": "integer",
                         "example": 1
                     },
                     "name": {
+                        "description": "Nama pemberi rating",
                         "type": "string",
                         "example": "John Doe"
                     },
                     "rating": {
+                        "description": "Nilai rating (1-5)",
                         "type": "integer",
                         "maximum": 5,
                         "minimum": 1,
                         "example": 5
                     },
                     "comment": {
+                        "description": "Komentar dari pemberi rating (opsional)",
                         "type": "string",
                         "example": "Really enjoyed this project",
                         "nullable": true
@@ -2528,22 +2551,27 @@
                 "type": "object"
             },
             "RatingUpdateRequest": {
+                "description": "Schema untuk request update rating. Semua field bersifat opsional.",
                 "properties": {
                     "id_project": {
+                        "description": "ID project yang diberi rating",
                         "type": "integer",
                         "example": 2
                     },
                     "name": {
+                        "description": "Nama pemberi rating",
                         "type": "string",
                         "example": "Jane Doe"
                     },
                     "rating": {
+                        "description": "Nilai rating (1-5)",
                         "type": "integer",
                         "maximum": 5,
                         "minimum": 1,
                         "example": 3
                     },
                     "comment": {
+                        "description": "Komentar dari pemberi rating",
                         "type": "string",
                         "example": "Updated comment",
                         "nullable": true
@@ -2552,8 +2580,10 @@
                 "type": "object"
             },
             "RatingPaginatedResponse": {
+                "description": "Schema untuk response list rating dengan pagination",
                 "properties": {
                     "data": {
+                        "description": "Array dari entri rating",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Rating"
@@ -2563,26 +2593,32 @@
                         "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
                         "properties": {
                             "current_page": {
+                                "description": "Halaman saat ini",
                                 "type": "integer",
                                 "example": 1
                             },
                             "limit": {
+                                "description": "Jumlah item per halaman",
                                 "type": "integer",
                                 "example": 10
                             },
                             "total": {
+                                "description": "Total jumlah rating",
                                 "type": "integer",
                                 "example": 100
                             },
                             "total_pages": {
+                                "description": "Total jumlah halaman",
                                 "type": "integer",
                                 "example": 10
                             },
                             "has_next": {
+                                "description": "Apakah ada halaman berikutnya",
                                 "type": "boolean",
                                 "example": true
                             },
                             "has_prev": {
+                                "description": "Apakah ada halaman sebelumnya",
                                 "type": "boolean",
                                 "example": false
                             }

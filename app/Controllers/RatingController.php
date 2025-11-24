@@ -58,7 +58,7 @@ class RatingController
 
     #[OA\Get(
         path: '/rating',
-        summary: 'List semua entri rating dengan pagination',
+        summary: 'List semua entri rating dengan pagination (dapat difilter berdasarkan project_id)',
         tags: ['Rating'],
         parameters: [
             new OA\Parameter(
@@ -74,6 +74,13 @@ class RatingController
                 required: false,
                 description: 'Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.',
                 schema: new OA\Schema(type: 'integer', minimum: 1, example: 10)
+            ),
+            new OA\Parameter(
+                name: 'project_id',
+                in: 'query',
+                required: false,
+                description: 'Filter rating berdasarkan project_id. Jika diisi, hanya akan mengembalikan rating untuk project dengan id yang sesuai.',
+                schema: new OA\Schema(type: 'integer', minimum: 1, example: 1)
             )
         ],
         responses: [
@@ -92,6 +99,7 @@ class RatingController
             $page = (int) Request::getQuery('page', 1);
             $limitParam = Request::getQuery('limit', null);
             $limit = $limitParam !== null ? (int) $limitParam : null;
+            $projectId = isset($_GET['project_id']) ? (int) $_GET['project_id'] : null;
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -103,10 +111,15 @@ class RatingController
                 return;
             }
 
-            $total = $this->rating->count();
+            if ($projectId !== null && $projectId < 1) {
+                Response::json(['message' => 'Parameter project_id harus lebih besar dari 0'], 400);
+                return;
+            }
+
+            $total = $this->rating->count($projectId);
 
             if ($limit === null) {
-                $data = $this->rating->all();
+                $data = $this->rating->all($projectId);
                 Response::json([
                     'data' => $data,
                     'pagination' => null
@@ -115,7 +128,7 @@ class RatingController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->rating->paginate($page, $limit);
+            $data = $this->rating->paginate($page, $limit, $projectId);
 
             Response::json([
                 'data' => $data,
