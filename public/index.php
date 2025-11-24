@@ -33,9 +33,17 @@ if ($requestPath && $requestPath !== '/') {
             $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
         }
         
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+        
         header('Content-Type: ' . $mimeType);
         header('Content-Length: ' . filesize($filePath));
-        header('Cache-Control: public, max-age=31536000'); 
+        header('Cache-Control: public, max-age=31536000');
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+        if ($origin !== '*') {
+            header('Access-Control-Allow-Credentials: true');
+        }
         
         readfile($filePath);
         exit;
@@ -46,6 +54,20 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $dotenv = Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+if ($origin !== '*') {
+    header('Access-Control-Allow-Credentials: true');
+}
+header('Access-Control-Max-Age: 86400');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 $router = new Router();
 
