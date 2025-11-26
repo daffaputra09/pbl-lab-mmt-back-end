@@ -105,7 +105,7 @@ class FileUploadHelper
             throw new \InvalidArgumentException('Failed to move uploaded file');
         }
 
-        return '/' . $directory . '/' . $filename;
+        return $directory . '/' . $filename;
     }
 
     public static function deleteFile(?string $filePath): bool
@@ -237,11 +237,9 @@ class FileUploadHelper
 
         $filePath = str_replace('\\', '/', $filePath);
         
-        if (strpos($filePath, '/') !== 0) {
-            $filePath = '/' . $filePath;
-        }
+        $filePath = ltrim($filePath, '/');
 
-        return $filePath;
+        return $filePath ?: null;
     }
 
     public static function getRelativePaths(array $filePaths): array

@@ -298,6 +298,7 @@ class ProjectController
                         return;
                     }
                     $videoUrl = FileUploadHelper::uploadVideo($file, 'uploads/project');
+                    $videoUrl = ltrim($videoUrl, '/');
                 } catch (InvalidArgumentException $exception) {
                     Response::json(['message' => 'Gagal upload video: ' . $exception->getMessage()], 400);
                     return;
@@ -318,7 +319,7 @@ class ProjectController
                         }
                         try {
                             $imageUrl = FileUploadHelper::uploadImage($file, 'uploads/project');
-                            $imageUrls[] = $imageUrl;
+                            $imageUrls[] = ltrim($imageUrl, '/');
                         } catch (InvalidArgumentException $e) {
                             foreach ($imageUrls as $imageUrl) {
                                 FileUploadHelper::deleteFile($imageUrl);
@@ -363,7 +364,8 @@ class ProjectController
                 return;
             }
 
-            Response::json($entry, 201);
+            $createdEntry = $this->project->find($entry['id']);
+            Response::json($createdEntry ?: $entry, 201);
             return;
         }
 
@@ -388,10 +390,14 @@ class ProjectController
         }
 
         try {
-            $videoUrl = isset($data['video_url']) ? FileUploadHelper::getRelativePath($data['video_url']) : null;
-            $imageUrls = isset($data['image_url']) && is_array($data['image_url']) 
-                ? FileUploadHelper::getRelativePaths($data['image_url']) 
-                : [];
+            $videoUrl = isset($data['video_url']) 
+                ? FileUploadHelper::getRelativePath($data['video_url']) 
+                : null;
+            $imageUrls = [];
+            if (isset($data['image_url']) && is_array($data['image_url'])) {
+                $imageUrls = FileUploadHelper::getRelativePaths($data['image_url']);
+            }
+            
             $entry = $this->project->create(
                 $data['name'],
                 $data['description'],
@@ -406,7 +412,8 @@ class ProjectController
             return;
         }
 
-        Response::json($entry, 201);
+        $createdEntry = $this->project->find($entry['id']);
+        Response::json($createdEntry ?: $entry, 201);
     }
 
     #[OA\Put(
@@ -456,7 +463,7 @@ class ProjectController
     )]
     public function update(int $id): void
     {
-        $existing = $this->project->find($id);
+        $existing = $this->project->findRaw($id);
         if ($existing === null) {
             Response::json(['message' => 'Entri proyek tidak ditemukan'], 404);
             return;
@@ -474,8 +481,32 @@ class ProjectController
             $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
             $idKategori = isset($formData['id_kategori']) ? (int) $formData['id_kategori'] : $existing['id_kategori'];
             $status = isset($formData['status']) ? $formData['status'] : $existing['status'];
-            $videoUrl = FileUploadHelper::getRelativePath($existing['video_url']);
-            $imageUrls = is_array($existing['image_url']) ? FileUploadHelper::getRelativePaths($existing['image_url']) : [];
+            $videoUrl = $existing['video_url'] ? ltrim($existing['video_url'], '/') : null;
+            
+            $existingImageUrls = is_array($existing['image_url']) 
+                ? array_map(function($url) {
+                    return ltrim($url, '/');
+                }, $existing['image_url']) 
+                : [];
+            
+            $imageUrlsToKeep = [];
+            $imageUrlProvided = false;
+            if (isset($formData['image_url'])) {
+                if (is_array($formData['image_url']) && !empty($formData['image_url'])) {
+                    $imageUrlsToKeep = FileUploadHelper::getRelativePaths($formData['image_url']);
+                    $imageUrlsToKeep = array_filter($imageUrlsToKeep);
+                    if (!empty($imageUrlsToKeep)) {
+                        $imageUrlProvided = true;
+                    }
+                } elseif (is_string($formData['image_url']) && trim($formData['image_url']) !== '') {
+                    $urls = array_map('trim', explode(',', $formData['image_url']));
+                    $imageUrlsToKeep = FileUploadHelper::getRelativePaths($urls);
+                    $imageUrlsToKeep = array_filter($imageUrlsToKeep);
+                    if (!empty($imageUrlsToKeep)) {
+                        $imageUrlProvided = true;
+                    }
+                }
+            }
             
             $tagIds = [];
             if (isset($formData['tag_ids'])) {
@@ -514,8 +545,8 @@ class ProjectController
                     if ($videoUrl) {
                         FileUploadHelper::deleteFile($videoUrl);
                     }
-                    $videoUrl = $newVideoUrl;
-                } catch (InvalidArgumentException $exception) {
+                    $videoUrl = ltrim($newVideoUrl, '/');
+                } catch (InvalidArgumentException $exception) { 
                     Response::json(['message' => 'Gagal upload video: ' . $exception->getMessage()], 400);
                     return;
                 }
@@ -525,14 +556,14 @@ class ProjectController
             if (Request::hasFilesArray('images')) {
                 try {
                     $files = Request::getFilesArray('images');
+                    if (empty($files)) {
+                        Response::json(['message' => 'Tidak ada file gambar yang valid untuk diupload. Pastikan file yang diupload valid dan tidak melebihi ukuran maksimum.'], 400);
+                        return;
+                    }
                     foreach ($files as $file) {
                         $imageUrl = FileUploadHelper::uploadImage($file, 'uploads/project');
-                        $newImageUrls[] = $imageUrl;
+                        $newImageUrls[] = ltrim($imageUrl, '/');
                     }
-                    foreach ($imageUrls as $oldImageUrl) {
-                        FileUploadHelper::deleteFile($oldImageUrl);
-                    }
-                    $imageUrls = $newImageUrls;
                 } catch (InvalidArgumentException $exception) {
                     foreach ($newImageUrls as $imageUrl) {
                         FileUploadHelper::deleteFile($imageUrl);
@@ -542,6 +573,30 @@ class ProjectController
                     }
                     Response::json(['message' => 'Gagal upload gambar: ' . $exception->getMessage()], 400);
                     return;
+                }
+            }
+
+            if (!$imageUrlProvided && empty($newImageUrls)) {
+                Response::json(['message' => 'Jika image_url kosong atau tidak dikirim, maka images wajib diisi untuk mengupload foto baru.'], 422);
+                return;
+            }
+
+            if ($imageUrlProvided) {
+                $imageUrls = array_merge($imageUrlsToKeep, $newImageUrls);
+            } else {
+                $imageUrls = $newImageUrls;
+            }
+
+            $imageUrls = array_unique($imageUrls);
+            $imageUrls = array_map(function($url) {
+                return ltrim($url, '/');
+            }, $imageUrls);
+            $imageUrls = array_values(array_filter($imageUrls)); 
+
+            foreach ($existingImageUrls as $oldImageUrl) {
+                $oldImageUrl = ltrim($oldImageUrl, '/');
+                if (!in_array($oldImageUrl, $imageUrls, true)) {
+                    FileUploadHelper::deleteFile($oldImageUrl);
                 }
             }
 
@@ -572,7 +627,8 @@ class ProjectController
                 return;
             }
 
-            Response::json($entry);
+            $updatedEntry = $this->project->find($id);
+            Response::json($updatedEntry ?: $entry);
             return;
         }
 
@@ -605,17 +661,41 @@ class ProjectController
         }
 
         try {
-            $videoUrl = isset($data['video_url']) ? FileUploadHelper::getRelativePath($data['video_url']) : FileUploadHelper::getRelativePath($existing['video_url']);
-            $imageUrls = isset($data['image_url']) && is_array($data['image_url']) 
-                ? FileUploadHelper::getRelativePaths($data['image_url']) 
-                : FileUploadHelper::getRelativePaths($existing['image_url'] ?? []);
+            $videoUrl = isset($data['video_url']) 
+                ? ltrim(FileUploadHelper::getRelativePath($data['video_url']) ?? '', '/')
+                : ltrim(FileUploadHelper::getRelativePath($existing['video_url']) ?? '', '/');
+            
+            $imageUrls = [];
+            if (isset($data['image_url'])) {
+                if (is_array($data['image_url'])) {
+                    $imageUrls = FileUploadHelper::getRelativePaths($data['image_url']);
+                    $imageUrls = array_map(function($url) {
+                        return ltrim($url, '/');
+                    }, $imageUrls);
+                    $imageUrls = array_values(array_filter($imageUrls)); 
+                }
+            } else {
+                $existingUrls = is_array($existing['image_url']) ? $existing['image_url'] : [];
+                $imageUrls = array_map(function($url) {
+                    return ltrim(FileUploadHelper::getRelativePath($url) ?? '', '/');
+                }, $existingUrls);
+                $imageUrls = array_values(array_filter($imageUrls)); 
+            }
+            
+            $existingUrls = is_array($existing['image_url']) ? $existing['image_url'] : [];
+            foreach ($existingUrls as $oldImageUrl) {
+                $oldImageUrlRelative = ltrim(FileUploadHelper::getRelativePath($oldImageUrl) ?? '', '/');
+                if (!in_array($oldImageUrlRelative, $imageUrls, true)) {
+                    FileUploadHelper::deleteFile($oldImageUrlRelative);
+                }
+            }
             
             $entry = $this->project->update(
                 $id,
                 $data['name'] ?? $existing['name'],
                 $data['description'] ?? $existing['description'],
                 $data['id_kategori'] ?? $existing['id_kategori'],
-                $videoUrl,
+                $videoUrl ?: null,
                 $imageUrls,
                 $data['status'] ?? $existing['status'],
                 $tagIds
@@ -630,7 +710,8 @@ class ProjectController
             return;
         }
 
-        Response::json($entry);
+        $updatedEntry = $this->project->find($id);
+        Response::json($updatedEntry ?: $entry);
     }
 
     #[OA\Delete(

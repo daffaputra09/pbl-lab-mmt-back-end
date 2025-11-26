@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Http\Request;
 use App\Http\Response;
 use App\Http\FileUploadHelper;
+use App\Middleware\AuthMiddleware;
 use App\Models\Berita;
 use Config\Database;
 use InvalidArgumentException;
@@ -26,7 +27,7 @@ class BeritaController
     
     #[OA\Get(
         path: '/berita',
-        summary: 'List semua entri berita dengan pagination',
+        summary: 'List semua entri berita dengan pagination dan pencarian',
         tags: ['Berita'],
         parameters: [
             new OA\Parameter(
@@ -42,6 +43,13 @@ class BeritaController
                 required: false,
                 description: 'Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.',
                 schema: new OA\Schema(type: 'integer', minimum: 1, example: 10)
+            ),
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                required: false,
+                description: 'Kata kunci pencarian untuk mencari berdasarkan title atau description',
+                schema: new OA\Schema(type: 'string', example: 'Sekolah')
             )
         ],
         responses: [
@@ -60,6 +68,7 @@ class BeritaController
             $page = (int) Request::getQuery('page', 1);
             $limitParam = Request::getQuery('limit', null);
             $limit = $limitParam !== null ? (int) $limitParam : null;
+            $search = Request::getQuery('search', null);
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -71,10 +80,10 @@ class BeritaController
                 return;
             }
 
-            $total = $this->berita->count();
+            $total = $this->berita->count($search);
 
             if ($limit === null) {
-                $data = $this->berita->all();
+                $data = $this->berita->all($search);
                 Response::json([
                     'data' => $data,
                     'pagination' => null
@@ -83,7 +92,7 @@ class BeritaController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->berita->paginate($page, $limit);
+            $data = $this->berita->paginate($page, $limit, $search);
 
             Response::json([
                 'data' => $data,
@@ -147,7 +156,8 @@ class BeritaController
 
     #[OA\Post(
         path: '/berita',
-        summary: 'Buat entri berita baru',
+        summary: 'Buat entri berita baru (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Berita'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -163,11 +173,23 @@ class BeritaController
                 content: new OA\JsonContent(ref: '#/components/schemas/Berita')
             ),
             new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid'),
             new OA\Response(response: 500, description: 'Gagal membuat entri berita')
         ]
     )]
     public function store(): void
     {
+        // Verifikasi token dan ambil user_id
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; // Response sudah dikirim oleh middleware
+        }
+
+        $userId = $tokenData['user_id'] ?? null;
+        if ($userId === null) {
+            Response::json(['message' => 'User ID tidak ditemukan dalam token'], 401);
+            return;
+        }
         if (Request::isMultipart()) {
             try {
                 $formData = Request::getFormData();
@@ -176,15 +198,13 @@ class BeritaController
                 return;
             }
 
-            $judul = trim($formData['judul'] ?? '');
+            // Support both 'title' and 'judul' field names, prefer 'title'
+            $judul = trim($formData['title'] ?? $formData['judul'] ?? '');
             $description = trim($formData['description'] ?? '');
-            $idUser = isset($formData['id_user']) && $formData['id_user'] !== ''
-                ? (int) $formData['id_user']
-                : null;
             $status = $formData['status'] ?? 'published';
 
             if ($judul === '' || $description === '') {
-                Response::json(['message' => 'Kolom judul dan description wajib diisi.'], 422);
+                Response::json(['message' => 'Kolom title dan description wajib diisi.'], 422);
                 return;
             }
 
@@ -210,7 +230,7 @@ class BeritaController
                     $judul,
                     $description,
                     $imageUrl,
-                    $idUser,
+                    $userId,
                     $status
                 );
             } catch (PDOException $exception) {
@@ -238,7 +258,7 @@ class BeritaController
                 $data['judul'],
                 $data['description'],
                 $imageUrl,
-                $data['id_user'] ?? null,
+                $userId,
                 $data['status'] ?? 'published'
             );
         } catch (PDOException $exception) {
@@ -252,7 +272,8 @@ class BeritaController
     // UPDATE
     #[OA\Put(
         path: '/berita/{id}',
-        summary: 'Perbarui entri berita',
+        summary: 'Perbarui entri berita (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Berita'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -268,12 +289,14 @@ class BeritaController
                 content: new OA\JsonContent(ref: '#/components/schemas/Berita')
             ),
             new OA\Response(response: 404, description: 'Entri berita tidak ditemukan'),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     #[OA\Post(
         path: '/berita/{id}',
-        summary: 'Perbarui entri berita (dengan upload gambar)',
+        summary: 'Perbarui entri berita (dengan upload gambar, requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Berita'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -292,11 +315,23 @@ class BeritaController
                 content: new OA\JsonContent(ref: '#/components/schemas/Berita')
             ),
             new OA\Response(response: 404, description: 'Entri berita tidak ditemukan'),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function update(int $id): void
     {
+        // Verifikasi token dan ambil user_id
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; // Response sudah dikirim oleh middleware
+        }
+
+        $userId = $tokenData['user_id'] ?? null;
+        if ($userId === null) {
+            Response::json(['message' => 'User ID tidak ditemukan dalam token'], 401);
+            return;
+        }
         $existing = $this->berita->find($id);
         if ($existing === null) {
             Response::json(['message' => 'Entri berita tidak ditemukan'], 404);
@@ -312,11 +347,11 @@ class BeritaController
                 return;
             }
 
-            $judul = isset($formData['judul']) ? trim($formData['judul']) : $existing['judul'];
+            // Support both 'title' and 'judul' field names, prefer 'title'
+            // Also handle existing data which now has 'title' instead of 'judul'
+            $existingTitle = $existing['title'] ?? $existing['judul'] ?? '';
+            $judul = isset($formData['title']) ? trim($formData['title']) : (isset($formData['judul']) ? trim($formData['judul']) : $existingTitle);
             $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
-            $idUser = isset($formData['id_user']) && $formData['id_user'] !== ''
-                ? (int) $formData['id_user']
-                : $existing['id_user'];
             $status = $formData['status'] ?? $existing['status'];
             $imageUrl = FileUploadHelper::getRelativePath($existing['image_url']);
 
@@ -343,7 +378,7 @@ class BeritaController
             $description = $description !== null ? trim($description) : null;
 
             if ($judul === '' || $description === null || $imageUrl === null) {
-                Response::json(['message' => 'Judul, description, dan gambar tidak boleh kosong.'], 422);
+                Response::json(['message' => 'Title, description, dan gambar tidak boleh kosong.'], 422);
                 return;
             }
 
@@ -353,7 +388,7 @@ class BeritaController
                     $judul,
                     $description,
                     $imageUrl,
-                    $idUser,
+                    $userId,
                     $status
                 );
             } catch (PDOException $exception) {
@@ -390,16 +425,16 @@ class BeritaController
             return;
         }
 
-        $judul = $data['judul'] ?? $existing['judul'];
+        $existingTitle = $existing['title'] ?? $existing['judul'] ?? null;
+        $judul = $data['judul'] ?? $existingTitle;
         $description = $data['description'] ?? $existing['description'];
         $imageUrl = isset($data['image_url']) 
             ? FileUploadHelper::getRelativePath($data['image_url']) 
             : FileUploadHelper::getRelativePath($existing['image_url']);
-        $idUser = $data['id_user'] ?? $existing['id_user'];
         $status = $data['status'] ?? $existing['status'];
 
         if ($judul === null || $imageUrl === null) {
-            Response::json(['message' => 'Judul dan URL gambar tidak boleh kosong.'], 400);
+            Response::json(['message' => 'Title dan URL gambar tidak boleh kosong.'], 400);
             return;
         }
 
@@ -409,7 +444,7 @@ class BeritaController
                 $judul,
                 $description,
                 $imageUrl,
-                $idUser,
+                $userId,
                 $status
             );
         } catch (PDOException $exception) {
@@ -470,18 +505,25 @@ class BeritaController
     // VALIDASI PAYLOAD
     private function validatePayload(array $payload, bool $isUpdate = false): array
     {
-        $required = ['judul', 'description', 'image_url'];
-        foreach ($required as $field) {
-            if (!$isUpdate && empty($payload[$field])) {
-                throw new InvalidArgumentException("Kolom {$field} wajib diisi.");
+        // Support both 'title' and 'judul' field names
+        $title = $payload['title'] ?? $payload['judul'] ?? null;
+        
+        if (!$isUpdate) {
+            if (empty($title)) {
+                throw new InvalidArgumentException("Kolom title wajib diisi.");
+            }
+            if (empty($payload['description'])) {
+                throw new InvalidArgumentException("Kolom description wajib diisi.");
+            }
+            if (empty($payload['image_url'])) {
+                throw new InvalidArgumentException("Kolom image_url wajib diisi.");
             }
         }
 
         return [
-            'judul' => $payload['judul'] ?? null,
+            'judul' => $title,
             'description' => $payload['description'] ?? null,
             'image_url' => $payload['image_url'] ?? null,
-            'id_user' => $payload['id_user'] ?? null,
             'status' => $payload['status'] ?? 'published',
         ];
     }

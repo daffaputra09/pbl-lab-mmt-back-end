@@ -14,46 +14,89 @@ class Berita
     {
     }
 
-    public function all(): array
+    public function all(?string $search = null): array
     {
-        $stmt = $this->db->query(
-            'SELECT id, judul, description, image_url, id_user, status, created_at 
-             FROM berita 
-             ORDER BY created_at DESC'
-        );
+        if ($search !== null && trim($search) !== '') {
+            $stmt = $this->db->prepare(
+                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                        u.id as user_id, u.name as user_name, u.email as user_email
+                 FROM berita b
+                 LEFT JOIN "user" u ON b.id_user = u.id
+                 WHERE b.judul ILIKE :search OR b.description ILIKE :search
+                 ORDER BY b.created_at DESC'
+            );
+            $stmt->execute(['search' => '%' . $search . '%']);
+        } else {
+            $stmt = $this->db->query(
+                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                        u.id as user_id, u.name as user_name, u.email as user_email
+                 FROM berita b
+                 LEFT JOIN "user" u ON b.id_user = u.id
+                 ORDER BY b.created_at DESC'
+            );
+        }
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
-    public function paginate(int $page = 1, int $perPage = 10): array
+    public function paginate(int $page = 1, int $perPage = 10, ?string $search = null): array
     {
         $offset = ($page - 1) * $perPage;
         
-        $stmt = $this->db->prepare(
-            'SELECT id, judul, description, image_url, id_user, status, created_at 
-             FROM berita 
-             ORDER BY created_at DESC
-             LIMIT :limit OFFSET :offset'
-        );
-        $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-        $stmt->execute();
+        if ($search !== null && trim($search) !== '') {
+            $stmt = $this->db->prepare(
+                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                        u.id as user_id, u.name as user_name, u.email as user_email
+                 FROM berita b
+                 LEFT JOIN "user" u ON b.id_user = u.id
+                 WHERE b.judul ILIKE :search OR b.description ILIKE :search
+                 ORDER BY b.created_at DESC
+                 LIMIT :limit OFFSET :offset'
+            );
+            $stmt->bindValue(':search', '%' . $search . '%', \PDO::PARAM_STR);
+            $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->db->prepare(
+                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                        u.id as user_id, u.name as user_name, u.email as user_email
+                 FROM berita b
+                 LEFT JOIN "user" u ON b.id_user = u.id
+                 ORDER BY b.created_at DESC
+                 LIMIT :limit OFFSET :offset'
+            );
+            $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+            $stmt->execute();
+        }
         
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
-    public function count(): int
+    public function count(?string $search = null): int
     {
-        $stmt = $this->db->query('SELECT COUNT(*) FROM berita');
+        if ($search !== null && trim($search) !== '') {
+            $stmt = $this->db->prepare(
+                'SELECT COUNT(*) FROM berita 
+                 WHERE judul ILIKE :search OR description ILIKE :search'
+            );
+            $stmt->execute(['search' => '%' . $search . '%']);
+        } else {
+            $stmt = $this->db->query('SELECT COUNT(*) FROM berita');
+        }
         return (int) $stmt->fetchColumn();
     }
 
     public function find(int $id): ?array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, judul, description, image_url, id_user, status, created_at 
-             FROM berita WHERE id = :id'
+            'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                    u.id as user_id, u.name as user_name, u.email as user_email
+             FROM berita b
+             LEFT JOIN "user" u ON b.id_user = u.id
+             WHERE b.id = :id'
         );
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
@@ -62,7 +105,7 @@ class Berita
             return null;
         }
 
-        return $this->transformImageUrl($result);
+        return $this->transformRow($result);
     }
 
     public function create(string $judul, string $description, string $imageUrl, ?int $idUser = null, string $status = 'published'): array
@@ -70,7 +113,7 @@ class Berita
         $stmt = $this->db->prepare(
             'INSERT INTO berita (judul, description, image_url, id_user, status)
              VALUES (:judul, :description, :image_url, :id_user, :status)
-             RETURNING id, judul, description, image_url, id_user, status, created_at'
+             RETURNING id'
         );
         $stmt->execute([
             'judul' => $judul,
@@ -81,7 +124,10 @@ class Berita
         ]);
 
         $result = $stmt->fetch();
-        return $this->transformImageUrl($result);
+        $id = $result['id'];
+        
+        // Fetch the complete record with user info
+        return $this->find($id);
     }
 
     public function update(
@@ -95,8 +141,7 @@ class Berita
         $stmt = $this->db->prepare(
             'UPDATE berita 
              SET judul = :judul, description = :description, image_url = :image_url, id_user = :id_user, status = :status
-             WHERE id = :id
-             RETURNING id, judul, description, image_url, id_user, status, created_at'
+             WHERE id = :id'
         );
         $stmt->execute([
             'id' => $id,
@@ -107,12 +152,12 @@ class Berita
             'status' => $status,
         ]);
 
-        $result = $stmt->fetch();
-        if ($result === false) {
+        if ($stmt->rowCount() === 0) {
             return null;
         }
 
-        return $this->transformImageUrl($result);
+        // Fetch the complete record with user info
+        return $this->find($id);
     }
 
     public function delete(int $id): bool
@@ -125,21 +170,43 @@ class Berita
     public function findByStatus(string $status): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, judul, description, image_url, id_user, status, created_at 
-             FROM berita 
-             WHERE LOWER(status) = LOWER(:status)
-             ORDER BY created_at DESC'
+            'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                    u.id as user_id, u.name as user_name, u.email as user_email
+             FROM berita b
+             LEFT JOIN "user" u ON b.id_user = u.id
+             WHERE LOWER(b.status) = LOWER(:status)
+             ORDER BY b.created_at DESC'
         );
         $stmt->execute(['status' => $status]);
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
-    private function transformImageUrl(array $row): array
+    private function transformRow(array $row): array
     {
+        // Transform image URL to full URL
         if (isset($row['image_url'])) {
             $row['image_url'] = FileUploadHelper::getFullUrl($row['image_url']);
         }
+        
+        // Transform 'judul' to 'title'
+        if (isset($row['judul'])) {
+            $row['title'] = $row['judul'];
+            unset($row['judul']);
+        }
+        
+        // Add user object if user information exists
+        if (isset($row['user_id'])) {
+            $row['user'] = [
+                'id' => $row['user_id'],
+                'name' => $row['user_name'],
+                'email' => $row['user_email']
+            ];
+            unset($row['user_id'], $row['user_name'], $row['user_email']);
+        } else {
+            $row['user'] = null;
+        }
+        
         return $row;
     }
 }

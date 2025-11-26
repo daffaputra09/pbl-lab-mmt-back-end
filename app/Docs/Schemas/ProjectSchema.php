@@ -23,8 +23,8 @@ use OpenApi\Attributes as OA;
             ],
             description: 'Object kategori yang berisi id dan name'
         ),
-        new OA\Property(property: 'video_url', type: 'string', nullable: true, example: '/uploads/project/file_6546f7a8e1234_1699012345.mp4'),
-        new OA\Property(property: 'image_url', type: 'array', items: new OA\Items(type: 'string', example: '/uploads/project/file_6546f7a8e1234_1699012345.jpg')),
+        new OA\Property(property: 'video_url', type: 'string', nullable: true, example: 'http://localhost:8000/uploads/project/file_6546f7a8e1234_1699012345.mp4', description: 'Full URL video (dengan host/domain)'),
+        new OA\Property(property: 'image_url', type: 'array', items: new OA\Items(type: 'string', example: 'http://localhost:8000/uploads/project/file_6546f7a8e1234_1699012345.jpg'), description: 'Array full URL gambar (dengan host/domain)'),
         new OA\Property(property: 'status', type: 'string', example: 'on_progress', enum: ['on_progress','completed']),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2025-11-12T09:30:00Z'),
         new OA\Property(
@@ -101,6 +101,13 @@ class ProjectCreateRequest
             description: 'File video project (MP4, MPEG, MOV, AVI, max 100MB). Opsional - kirim hanya jika ingin mengubah video. Video lama akan otomatis terhapus.'
         ),
         new OA\Property(
+            property: 'image_url',
+            type: 'array',
+            items: new OA\Items(type: 'string'),
+            nullable: true,
+            description: 'Array of image URLs (relative paths atau full URLs) yang ingin dipertahankan. Opsional - kirim array path relatif atau full URL dari foto yang ingin dipertahankan. Contoh: ["uploads/project/file1.jpg", "http://localhost:8000/uploads/project/file2.jpg"]. Jika tidak dikirim atau kosong, maka images wajib diisi untuk mengupload foto baru. Jika dikirim array kosong [], semua foto lama akan dihapus.'
+        ),
+        new OA\Property(
             property: 'images',
             type: 'array',
             items: new OA\Items(
@@ -108,7 +115,7 @@ class ProjectCreateRequest
                 format: 'binary'
             ),
             nullable: true,
-            description: 'Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Opsional - kirim hanya jika ingin mengubah images. Semua images lama akan otomatis terhapus. Gunakan field name "images[]" saat upload.'
+            description: 'Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Wajib diisi jika image_url kosong atau tidak dikirim. Jika image_url dikirim, images bersifat opsional untuk menambahkan foto baru. Foto baru akan digabungkan dengan image_url yang dikirim. Gunakan field name "images[]" saat upload.'
         ),
         new OA\Property(property: 'status', type: 'string', example: 'completed', enum: ['on_progress','completed'])
     ]

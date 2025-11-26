@@ -35,15 +35,16 @@ if ($requestPath && $requestPath !== '/') {
         
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
         
-        header('Content-Type: ' . $mimeType);
-        header('Content-Length: ' . filesize($filePath));
-        header('Cache-Control: public, max-age=31536000');
         header('Access-Control-Allow-Origin: ' . $origin);
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
         if ($origin !== '*') {
             header('Access-Control-Allow-Credentials: true');
         }
+        
+        header('Content-Type: ' . $mimeType);
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: public, max-age=31536000');
         
         readfile($filePath);
         exit;
@@ -57,8 +58,10 @@ $dotenv->safeLoad();
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 
+header('Access-Control-Allow-Origin: ' . $origin);
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+
 if ($origin !== '*') {
     header('Access-Control-Allow-Credentials: true');
 }

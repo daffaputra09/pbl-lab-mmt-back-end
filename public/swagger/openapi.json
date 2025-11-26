@@ -46,7 +46,7 @@
                 "tags": [
                     "Berita"
                 ],
-                "summary": "List semua entri berita dengan pagination",
+                "summary": "List semua entri berita dengan pagination dan pencarian",
                 "operationId": "b05e96bb4f07e02eb571cc646b8a0d70",
                 "parameters": [
                     {
@@ -70,6 +70,16 @@
                             "type": "integer",
                             "minimum": 1,
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Kata kunci pencarian untuk mencari berdasarkan title atau description",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Sekolah"
                         }
                     }
                 ],
@@ -96,7 +106,7 @@
                 "tags": [
                     "Berita"
                 ],
-                "summary": "Buat entri berita baru",
+                "summary": "Buat entri berita baru (requires authentication)",
                 "operationId": "8895c5a8e244f61957efd43cadc89ac8",
                 "requestBody": {
                     "required": true,
@@ -122,10 +132,18 @@
                     "400": {
                         "description": "Permintaan tidak valid"
                     },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
                     "500": {
                         "description": "Gagal membuat entri berita"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/berita/{id}": {
@@ -165,7 +183,7 @@
                 "tags": [
                     "Berita"
                 ],
-                "summary": "Perbarui entri berita",
+                "summary": "Perbarui entri berita (requires authentication)",
                 "operationId": "3b4917ee8b3e1c7359893225ccf23441",
                 "parameters": [
                     {
@@ -203,14 +221,22 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
                     "Berita"
                 ],
-                "summary": "Perbarui entri berita (dengan upload gambar)",
+                "summary": "Perbarui entri berita (dengan upload gambar, requires authentication)",
                 "operationId": "4221be809f74d3a5bc537200117c0f36",
                 "parameters": [
                     {
@@ -248,8 +274,16 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -1764,7 +1798,7 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "judul": {
+                    "title": {
                         "type": "string",
                         "example": "Pemberitaan Baru Tentang Sekolah"
                     },
@@ -1790,6 +1824,24 @@
                         ],
                         "example": "published"
                     },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "John Doe"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "john@example.com"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
@@ -1800,11 +1852,11 @@
             },
             "BeritaCreateRequest": {
                 "required": [
-                    "judul",
+                    "title",
                     "description"
                 ],
                 "properties": {
-                    "judul": {
+                    "title": {
                         "type": "string",
                         "example": "Pemberitaan Baru Tentang Sekolah"
                     },
@@ -1816,11 +1868,6 @@
                         "description": "File gambar berita (JPG, PNG, GIF, WEBP, max 5MB). Wajib diisi untuk flow upload file.",
                         "type": "string",
                         "format": "binary",
-                        "nullable": true
-                    },
-                    "id_user": {
-                        "type": "integer",
-                        "example": 5,
                         "nullable": true
                     },
                     "status": {
@@ -1837,7 +1884,7 @@
             },
             "BeritaUpdateRequest": {
                 "properties": {
-                    "judul": {
+                    "title": {
                         "type": "string",
                         "example": "Pembaruan Judul Berita"
                     },
@@ -1849,11 +1896,6 @@
                         "description": "File gambar berita (JPG, PNG, GIF, WEBP, max 5MB). Opsional - kirim hanya jika ingin mengubah gambar.",
                         "type": "string",
                         "format": "binary",
-                        "nullable": true
-                    },
-                    "id_user": {
-                        "type": "integer",
-                        "example": 5,
                         "nullable": true
                     },
                     "status": {
@@ -2288,15 +2330,17 @@
                         "type": "object"
                     },
                     "video_url": {
+                        "description": "Full URL video (dengan host/domain)",
                         "type": "string",
-                        "example": "/uploads/project/file_6546f7a8e1234_1699012345.mp4",
+                        "example": "http://localhost:8000/uploads/project/file_6546f7a8e1234_1699012345.mp4",
                         "nullable": true
                     },
                     "image_url": {
+                        "description": "Array full URL gambar (dengan host/domain)",
                         "type": "array",
                         "items": {
                             "type": "string",
-                            "example": "/uploads/project/file_6546f7a8e1234_1699012345.jpg"
+                            "example": "http://localhost:8000/uploads/project/file_6546f7a8e1234_1699012345.jpg"
                         }
                     },
                     "status": {
@@ -2414,8 +2458,16 @@
                         "format": "binary",
                         "nullable": true
                     },
+                    "image_url": {
+                        "description": "Array of image URLs (relative paths atau full URLs) yang ingin dipertahankan. Opsional - kirim array path relatif atau full URL dari foto yang ingin dipertahankan. Contoh: [\"uploads/project/file1.jpg\", \"http://localhost:8000/uploads/project/file2.jpg\"]. Jika tidak dikirim atau kosong, maka images wajib diisi untuk mengupload foto baru. Jika dikirim array kosong [], semua foto lama akan dihapus.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    },
                     "images": {
-                        "description": "Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Opsional - kirim hanya jika ingin mengubah images. Semua images lama akan otomatis terhapus. Gunakan field name \"images[]\" saat upload.",
+                        "description": "Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Wajib diisi jika image_url kosong atau tidak dikirim. Jika image_url dikirim, images bersifat opsional untuk menambahkan foto baru. Foto baru akan digabungkan dengan image_url yang dikirim. Gunakan field name \"images[]\" saat upload.",
                         "type": "array",
                         "items": {
                             "type": "string",

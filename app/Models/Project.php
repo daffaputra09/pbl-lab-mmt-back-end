@@ -187,6 +187,23 @@ class Project
         return $result;
     }
 
+    public function findRaw(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, name, description, id_kategori, video_url, image_url, status, created_at 
+             FROM project WHERE id = :id'
+        );
+        $stmt->execute(['id' => $id]);
+        $result = $stmt->fetch();
+
+        if ($result === false) {
+            return null;
+        }
+
+        $result = $this->parseImageUrl($result, false);
+        return $result;
+    }
+
     public function getTags(int $projectId): array
     {
         $stmt = $this->db->prepare(
@@ -235,7 +252,6 @@ class Project
         string $status = 'on_progress',
         array $tagIds = []
     ): array {
-        // Convert imageUrls array into a Postgres array literal (if using Postgres)
         $imageUrlsSql = '{' . implode(',', array_map(fn($u) => '"' . $u . '"', $imageUrls)) . '}';
 
         $stmt = $this->db->prepare(
@@ -253,6 +269,7 @@ class Project
         ]);
 
         $result = $stmt->fetch();
+
         $result = $this->parseImageUrl($result);
         
         $this->syncTags($result['id'], $tagIds);
@@ -339,7 +356,7 @@ class Project
         }, $results);
     }
 
-    private function parseImageUrl(array $row): array
+    private function parseImageUrl(array $row, bool $transformUrls = true): array
     {
         if (isset($row['image_url'])) {
             $imageUrl = $row['image_url'];
@@ -365,18 +382,28 @@ class Project
             $row['image_url'] = [];
         }
 
-        // Transform URLs to include base URL
-        return $this->transformUrls($row);
+        if ($transformUrls) {
+            return $this->transformUrls($row);
+        }
+
+        if (isset($row['video_url']) && $row['video_url'] !== null) {
+            $row['video_url'] = ltrim($row['video_url'], '/');
+        }
+        if (isset($row['image_url']) && is_array($row['image_url'])) {
+            $row['image_url'] = array_map(function($url) {
+                return ltrim($url, '/');
+            }, $row['image_url']);
+        }
+
+        return $row;
     }
 
     private function transformUrls(array $row): array
     {
-        // Transform video_url
         if (isset($row['video_url'])) {
             $row['video_url'] = FileUploadHelper::getFullUrl($row['video_url']);
         }
 
-        // Transform image_url array
         if (isset($row['image_url']) && is_array($row['image_url'])) {
             $row['image_url'] = FileUploadHelper::getFullUrls($row['image_url']);
         }
