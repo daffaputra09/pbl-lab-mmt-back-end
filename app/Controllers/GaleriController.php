@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Http\Request;
 use App\Http\Response;
 use App\Http\FileUploadHelper;
+use App\Middleware\AuthMiddleware;
 use App\Models\Galeri;
 use Config\Database;
 use InvalidArgumentException;
@@ -200,7 +201,8 @@ class GaleriController
 
     #[OA\Post(
         path: '/galeri',
-        summary: 'Buat entri galeri baru',
+        summary: 'Buat entri galeri baru (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Galeri'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -216,11 +218,17 @@ class GaleriController
                 content: new OA\JsonContent(ref: '#/components/schemas/Galeri')
             ),
             new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid'),
             new OA\Response(response: 500, description: 'Gagal membuat entri galeri')
         ]
     )]
     public function store(): void
     {
+        // Verifikasi token
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; // Response sudah dikirim oleh middleware
+        }
         if (Request::isMultipart()) {
             try {
                 $formData = Request::getFormData();
@@ -311,7 +319,8 @@ class GaleriController
 
     #[OA\Put(
         path: '/galeri/{id}',
-        summary: 'Perbarui entri galeri',
+        summary: 'Perbarui entri galeri (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Galeri'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -327,12 +336,14 @@ class GaleriController
                 content: new OA\JsonContent(ref: '#/components/schemas/Galeri')
             ),
             new OA\Response(response: 404, description: 'Entri galeri tidak ditemukan'),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     #[OA\Post(
         path: '/galeri/{id}',
-        summary: 'Perbarui entri galeri (dengan upload file)',
+        summary: 'Perbarui entri galeri (dengan upload file, requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Galeri'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -351,11 +362,17 @@ class GaleriController
                 content: new OA\JsonContent(ref: '#/components/schemas/Galeri')
             ),
             new OA\Response(response: 404, description: 'Entri galeri tidak ditemukan'),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function update(int $id): void
     {
+        // Verifikasi token
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; // Response sudah dikirim oleh middleware
+        }
         $existing = $this->galeri->find($id);
         if ($existing === null) {
             Response::json(['message' => 'Entri galeri tidak ditemukan'], 404);
@@ -491,18 +508,25 @@ class GaleriController
 
     #[OA\Delete(
         path: '/galeri/{id}',
-        summary: 'Hapus entri galeri',
+        summary: 'Hapus entri galeri (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Galeri'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Entri galeri berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Entri galeri tidak ditemukan')
+            new OA\Response(response: 404, description: 'Entri galeri tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        // Verifikasi token
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; // Response sudah dikirim oleh middleware
+        }
         try {
             $entry = $this->galeri->find($id);
             if ($entry === null) {

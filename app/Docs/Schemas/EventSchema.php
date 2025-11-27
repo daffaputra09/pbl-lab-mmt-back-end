@@ -14,7 +14,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'judul', type: 'string', example: 'Workshop PHP'),
         new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Deskripsi lengkap event'),
         new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.jpg'),
-        new OA\Property(property: 'tanggal_event', type: 'string', format: 'date', nullable: true, example: '2024-12-31', description: 'Tanggal pelaksanaan event')
+        new OA\Property(property: 'tanggal_event', type: 'string', format: 'date', nullable: true, example: '2024-12-31', description: 'Tanggal pelaksanaan event'),
+        new OA\Property(property: 'status', type: 'string', enum: ['terlewat', 'akan_datang', 'tidak_ditentukan'], example: 'akan_datang', description: 'Status event: terlewat (tanggal_event < hari ini), akan_datang (tanggal_event >= hari ini), tidak_ditentukan (tanggal_event null)')
     ]
 )]
 class EventSchema

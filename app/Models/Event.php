@@ -14,35 +14,125 @@ class Event
     {
     }
 
-    public function all(): array
+    public function all(?bool $sortByDate = null, ?string $search = null): array
     {
-        $stmt = $this->db->query('SELECT id, image_url, judul, description, tanggal_event FROM event ORDER BY judul');
-
+        $query = 'SELECT id, image_url, judul, description, tanggal_event FROM event';
+        $params = [];
+        $whereConditions = [];
+        
+        if ($search !== null && $search !== '') {
+            $whereConditions[] = '(LOWER(judul) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))';
+            $params['search'] = "%{$search}%";
+        }
+        
+        if (!empty($whereConditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $whereConditions);
+        }
+        
+        if ($sortByDate === true) {
+            $query .= ' ORDER BY 
+                CASE 
+                    WHEN tanggal_event IS NULL THEN 2
+                    WHEN tanggal_event >= CURRENT_DATE THEN 0
+                    ELSE 1
+                END,
+                CASE WHEN tanggal_event >= CURRENT_DATE THEN tanggal_event END ASC,
+                CASE WHEN tanggal_event < CURRENT_DATE THEN tanggal_event END DESC,
+                id DESC';
+        } elseif ($sortByDate === false) {
+            $query .= ' ORDER BY id DESC';
+        } else {
+            $query .= ' ORDER BY id DESC';
+        }
+        
+        if (!empty($params)) {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        } else {
+            $stmt = $this->db->query($query);
+        }
+        
         $results = $stmt->fetchAll();
         return array_map([$this, 'transformImageUrl'], $results);
     }
 
-    public function paginate(int $page = 1, int $limit = 10): array
+    public function paginate(int $page = 1, int $limit = 10, ?bool $sortByDate = null, ?string $search = null): array
     {
         $offset = ($page - 1) * $limit;
         
-        $stmt = $this->db->prepare(
-            'SELECT id, image_url, judul, description, tanggal_event 
-             FROM event 
-             ORDER BY judul
-             LIMIT :limit OFFSET :offset'
-        );
+        $query = 'SELECT id, image_url, judul, description, tanggal_event 
+                  FROM event';
+        $params = [];
+        $whereConditions = [];
+        
+        if ($search !== null && $search !== '') {
+            $whereConditions[] = '(LOWER(judul) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))';
+            $params['search'] = "%{$search}%";
+        }
+        
+        if (!empty($whereConditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $whereConditions);
+        }
+        
+        if ($sortByDate === true) {
+            // Urutkan: belum terlewat dulu (prioritas 0), terlewat setelahnya (prioritas 1), NULL di akhir (prioritas 2)
+            // Untuk yang belum terlewat: urutkan berdasarkan tanggal terdekat (ASC)
+            // Untuk yang terlewat: urutkan berdasarkan tanggal terbaru terlewat (DESC)
+            $query .= ' ORDER BY 
+                CASE 
+                    WHEN tanggal_event IS NULL THEN 2
+                    WHEN tanggal_event >= CURRENT_DATE THEN 0
+                    ELSE 1
+                END,
+                CASE WHEN tanggal_event >= CURRENT_DATE THEN tanggal_event END ASC,
+                CASE WHEN tanggal_event < CURRENT_DATE THEN tanggal_event END DESC,
+                id DESC';
+        } elseif ($sortByDate === false) {
+            $query .= ' ORDER BY id DESC';
+        } else {
+            $query .= ' ORDER BY id DESC';
+        }
+        
+        $query .= ' LIMIT :limit OFFSET :offset';
+        $params['limit'] = $limit;
+        $params['offset'] = $offset;
+        
+        $stmt = $this->db->prepare($query);
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        
+        if (isset($params['search'])) {
+            $stmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
+        }
+        
         $stmt->execute();
         
         $results = $stmt->fetchAll();
         return array_map([$this, 'transformImageUrl'], $results);
     }
 
-    public function count(): int
+    public function count(?string $search = null, ?bool $sortByDate = null): int
     {
-        $stmt = $this->db->query('SELECT COUNT(*) FROM event');
+        $query = 'SELECT COUNT(*) FROM event';
+        $params = [];
+        $whereConditions = [];
+        
+        if ($search !== null && $search !== '') {
+            $whereConditions[] = '(LOWER(judul) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))';
+            $params['search'] = "%{$search}%";
+        }
+        
+        if (!empty($whereConditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $whereConditions);
+        }
+        
+        if (!empty($params)) {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        } else {
+            $stmt = $this->db->query($query);
+        }
+        
         return (int) $stmt->fetchColumn();
     }
 
@@ -166,6 +256,23 @@ class Event
     {
         if (isset($row['image_url'])) {
             $row['image_url'] = FileUploadHelper::getFullUrl($row['image_url']);
+        }
+        return $row;
+    }
+
+    public function addEventStatus(array $row): array
+    {
+        if ($row['tanggal_event'] === null) {
+            $row['status'] = 'tidak_ditentukan';
+        } else {
+            $tanggalEvent = new \DateTime($row['tanggal_event']);
+            $today = new \DateTime('today');
+            
+            if ($tanggalEvent < $today) {
+                $row['status'] = 'terlewat';
+            } else {
+                $row['status'] = 'akan_datang';
+            }
         }
         return $row;
     }

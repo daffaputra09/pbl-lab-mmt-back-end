@@ -392,6 +392,26 @@
                             "minimum": 1,
                             "example": 10
                         }
+                    },
+                    {
+                        "name": "sort_by_date",
+                        "in": "query",
+                        "description": "Jika true, akan menampilkan semua event dengan prioritas: event yang belum terlewat tampil di atas (diurutkan berdasarkan tanggal terdekat), kemudian event yang terlewat. Jika false, akan mengurutkan berdasarkan data terbaru (id DESC). Jika tidak diisi, default adalah data terbaru.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Mencari event berdasarkan judul atau description (case insensitive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "workshop"
+                        }
                     }
                 ],
                 "responses": {
@@ -417,7 +437,7 @@
                 "tags": [
                     "Event"
                 ],
-                "summary": "Buat event baru",
+                "summary": "Buat event baru (requires authentication)",
                 "operationId": "716b296d4070d33bb86df00ac32bf39d",
                 "requestBody": {
                     "required": true,
@@ -446,10 +466,18 @@
                     "409": {
                         "description": "Event dengan judul tersebut sudah ada"
                     },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
                     "500": {
                         "description": "Gagal membuat event"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/event/{id}": {
@@ -489,7 +517,7 @@
                 "tags": [
                     "Event"
                 ],
-                "summary": "Perbarui event",
+                "summary": "Perbarui event (requires authentication)",
                 "operationId": "6c90e3ea4c0d44994b83024860a6684d",
                 "parameters": [
                     {
@@ -530,14 +558,22 @@
                     },
                     "409": {
                         "description": "Event dengan judul tersebut sudah ada"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Event"
                 ],
-                "summary": "Hapus event",
+                "summary": "Hapus event (requires authentication)",
                 "operationId": "da84b168882132238cdab86b625094a4",
                 "parameters": [
                     {
@@ -555,8 +591,16 @@
                     },
                     "404": {
                         "description": "Event tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/event/recent": {
@@ -952,7 +996,7 @@
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "Buat kategori baru",
+                "summary": "Buat kategori baru (requires authentication)",
                 "operationId": "a7534accfc8a790d20661bd05f65cdab",
                 "requestBody": {
                     "required": true,
@@ -977,8 +1021,16 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/kategori/{id}": {
@@ -1018,7 +1070,7 @@
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "Perbarui kategori",
+                "summary": "Perbarui kategori (requires authentication)",
                 "operationId": "00588217e025bf26be9e146d0e652cc7",
                 "parameters": [
                     {
@@ -1053,14 +1105,22 @@
                     },
                     "404": {
                         "description": "Kategori tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "Hapus kategori",
+                "summary": "Hapus kategori (requires authentication)",
                 "operationId": "5ee524be08707ee82fa8d4db74e238a6",
                 "parameters": [
                     {
@@ -1078,8 +1138,16 @@
                     },
                     "404": {
                         "description": "Kategori tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/project": {
@@ -1175,7 +1243,7 @@
                 "tags": [
                     "Project"
                 ],
-                "summary": "Buat entri proyek baru",
+                "summary": "Buat entri proyek baru (requires authentication)",
                 "operationId": "cbd91ff01e8298c059298b7e7a593b83",
                 "requestBody": {
                     "required": true,
@@ -1201,10 +1269,18 @@
                     "400": {
                         "description": "Permintaan tidak valid"
                     },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
                     "500": {
                         "description": "Gagal membuat entri proyek"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/project/{id}": {
@@ -1244,7 +1320,7 @@
                 "tags": [
                     "Project"
                 ],
-                "summary": "Perbarui entri proyek",
+                "summary": "Perbarui entri proyek (requires authentication)",
                 "operationId": "87b37c1b5800d76b86bf50a128b9b7c2",
                 "parameters": [
                     {
@@ -1282,14 +1358,22 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
                     "Project"
                 ],
-                "summary": "Perbarui entri proyek (dengan upload file)",
+                "summary": "Perbarui entri proyek (dengan upload file, requires authentication)",
                 "operationId": "1194607a4661f62064a0c0f9b8deafe7",
                 "parameters": [
                     {
@@ -1327,14 +1411,22 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Project"
                 ],
-                "summary": "Hapus entri proyek berdasarkan ID",
+                "summary": "Hapus entri proyek berdasarkan ID (requires authentication)",
                 "operationId": "a0ab7fce47fd63b2c6dc22f46a901a6b",
                 "parameters": [
                     {
@@ -1352,8 +1444,16 @@
                     },
                     "404": {
                         "description": "Entri proyek tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/rating": {
@@ -1613,7 +1713,7 @@
                 "tags": [
                     "Tag"
                 ],
-                "summary": "Buat tag baru",
+                "summary": "Buat tag baru (requires authentication)",
                 "operationId": "371fff29fe79c6354671e7425802132c",
                 "requestBody": {
                     "required": true,
@@ -1627,7 +1727,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "tag berhasil dibuat",
+                        "description": "Tag berhasil dibuat",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1638,8 +1738,16 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/tag/{id}": {
@@ -1679,7 +1787,7 @@
                 "tags": [
                     "Tag"
                 ],
-                "summary": "Perbarui tag",
+                "summary": "Perbarui tag (requires authentication)",
                 "operationId": "332246b06ffcb34f421048933333ead7",
                 "parameters": [
                     {
@@ -1714,14 +1822,22 @@
                     },
                     "404": {
                         "description": "Tag tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Tag"
                 ],
-                "summary": "Hapus tag",
+                "summary": "Hapus tag (requires authentication)",
                 "operationId": "2579e0ff9614a0ddcd6ebd7f7019f328",
                 "parameters": [
                     {
@@ -1739,8 +1855,16 @@
                     },
                     "404": {
                         "description": "Tag tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/user": {
@@ -2001,6 +2125,16 @@
                         "format": "date",
                         "example": "2024-12-31",
                         "nullable": true
+                    },
+                    "status": {
+                        "description": "Status event: terlewat (tanggal_event < hari ini), akan_datang (tanggal_event >= hari ini), tidak_ditentukan (tanggal_event null)",
+                        "type": "string",
+                        "enum": [
+                            "terlewat",
+                            "akan_datang",
+                            "tidak_ditentukan"
+                        ],
+                        "example": "akan_datang"
                     }
                 },
                 "type": "object"

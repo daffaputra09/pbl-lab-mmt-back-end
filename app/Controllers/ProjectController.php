@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Http\Request;
 use App\Http\Response;
 use App\Http\FileUploadHelper;
+use App\Middleware\AuthMiddleware;
 use App\Models\Project;
 use App\Models\Tag;
 use Config\Database;
@@ -220,7 +221,8 @@ class ProjectController
 
     #[OA\Post(
         path: '/project',
-        summary: 'Buat entri proyek baru',
+        summary: 'Buat entri proyek baru (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Project'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -236,11 +238,16 @@ class ProjectController
                 content: new OA\JsonContent(ref: '#/components/schemas/Project')
             ),
             new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid'),
             new OA\Response(response: 500, description: 'Gagal membuat entri proyek')
         ]
     )]
     public function store(): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         if (Request::isMultipart()) {
             try {
                 $formData = Request::getFormData();
@@ -418,7 +425,8 @@ class ProjectController
 
     #[OA\Put(
         path: '/project/{id}',
-        summary: 'Perbarui entri proyek',
+        summary: 'Perbarui entri proyek (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Project'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -434,12 +442,14 @@ class ProjectController
                 content: new OA\JsonContent(ref: '#/components/schemas/Project')
             ),
             new OA\Response(response: 404, description: 'Entri proyek tidak ditemukan'),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     #[OA\Post(
         path: '/project/{id}',
-        summary: 'Perbarui entri proyek (dengan upload file)',
+        summary: 'Perbarui entri proyek (dengan upload file, requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Project'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -458,11 +468,16 @@ class ProjectController
                 content: new OA\JsonContent(ref: '#/components/schemas/Project')
             ),
             new OA\Response(response: 404, description: 'Entri proyek tidak ditemukan'),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function update(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         $existing = $this->project->findRaw($id);
         if ($existing === null) {
             Response::json(['message' => 'Entri proyek tidak ditemukan'], 404);
@@ -716,18 +731,24 @@ class ProjectController
 
     #[OA\Delete(
         path: '/project/{id}',
-        summary: 'Hapus entri proyek berdasarkan ID',
+        summary: 'Hapus entri proyek berdasarkan ID (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Project'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Entri proyek berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Entri proyek tidak ditemukan')
+            new OA\Response(response: 404, description: 'Entri proyek tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         try {
             $entry = $this->project->find($id);
             if ($entry === null) {

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Middleware\AuthMiddleware;
 use App\Models\Tag;
 use Config\Database;
 use InvalidArgumentException;
@@ -130,7 +131,8 @@ class TagController
 
     #[OA\Post(
         path: '/tag',
-        summary: 'Buat tag baru',
+        summary: 'Buat tag baru (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Tag'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -139,14 +141,19 @@ class TagController
         responses: [
             new OA\Response(
                 response: 201,
-                description: 'tag berhasil dibuat',
+                description: 'Tag berhasil dibuat',
                 content: new OA\JsonContent(ref: '#/components/schemas/Tag')
             ),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function store(): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         try {
             $payload = Request::json();
         } catch (InvalidArgumentException $exception) {
@@ -178,7 +185,8 @@ class TagController
 
     #[OA\Put(
         path: '/tag/{id}',
-        summary: 'Perbarui tag',
+        summary: 'Perbarui tag (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Tag'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -193,11 +201,16 @@ class TagController
                 description: 'Tag berhasil diperbarui',
                 content: new OA\JsonContent(ref: '#/components/schemas/Tag')
             ),
-            new OA\Response(response: 404, description: 'Tag tidak ditemukan')
+            new OA\Response(response: 404, description: 'Tag tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function update(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         try {
             $payload = Request::json();
         } catch (InvalidArgumentException $exception) {
@@ -240,18 +253,24 @@ class TagController
 
     #[OA\Delete(
         path: '/tag/{id}',
-        summary: 'Hapus tag',
+        summary: 'Hapus tag (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Tag'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Tag berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Tag tidak ditemukan')
+            new OA\Response(response: 404, description: 'Tag tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         $deleted = $this->tag->delete($id);
 
         if (!$deleted) {

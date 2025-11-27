@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Http\Request;
 use App\Http\Response;
 use App\Http\FileUploadHelper;
+use App\Middleware\AuthMiddleware;
 use App\Models\Event;
 use Config\Database;
 use InvalidArgumentException;
@@ -42,6 +43,20 @@ class EventController
                 required: false,
                 description: 'Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.',
                 schema: new OA\Schema(type: 'integer', minimum: 1, example: 10)
+            ),
+            new OA\Parameter(
+                name: 'sort_by_date',
+                in: 'query',
+                required: false,
+                description: 'Jika true, akan menampilkan semua event dengan prioritas: event yang belum terlewat tampil di atas (diurutkan berdasarkan tanggal terdekat), kemudian event yang terlewat. Jika false, akan mengurutkan berdasarkan data terbaru (id DESC). Jika tidak diisi, default adalah data terbaru.',
+                schema: new OA\Schema(type: 'boolean', example: true)
+            ),
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                required: false,
+                description: 'Mencari event berdasarkan judul atau description (case insensitive)',
+                schema: new OA\Schema(type: 'string', example: 'workshop')
             )
         ],
         responses: [
@@ -60,6 +75,10 @@ class EventController
             $page = (int) Request::getQuery('page', 1);
             $limitParam = Request::getQuery('limit', null);
             $limit = $limitParam !== null ? (int) $limitParam : null;
+            $sortByDateParam = Request::getQuery('sort_by_date', null);
+            $sortByDate = $sortByDateParam !== null ? filter_var($sortByDateParam, FILTER_VALIDATE_BOOLEAN) : null;
+            $search = Request::getQuery('search', null);
+            $search = $search !== null && $search !== '' ? trim($search) : null;
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -71,10 +90,11 @@ class EventController
                 return;
             }
 
-            $total = $this->event->count();
+            $total = $this->event->count($search, $sortByDate);
 
             if ($limit === null) {
-                $data = $this->event->all();
+                $data = $this->event->all($sortByDate, $search);
+                $data = array_map([$this->event, 'addEventStatus'], $data);
                 Response::json([
                     'data' => $data,
                     'pagination' => null
@@ -83,7 +103,8 @@ class EventController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->event->paginate($page, $limit);
+            $data = $this->event->paginate($page, $limit, $sortByDate, $search);
+            $data = array_map([$this->event, 'addEventStatus'], $data);
 
             Response::json([
                 'data' => $data,
@@ -192,7 +213,8 @@ class EventController
 
     #[OA\Post(
         path: '/event',
-        summary: 'Buat event baru',
+        summary: 'Buat event baru (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Event'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -209,11 +231,16 @@ class EventController
             ),
             new OA\Response(response: 422, description: 'Judul wajib diisi'),
             new OA\Response(response: 409, description: 'Event dengan judul tersebut sudah ada'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid'),
             new OA\Response(response: 500, description: 'Gagal membuat event')
         ]
     )]
     public function store(): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         // Get form data
         try {
             $formData = Request::getFormData();
@@ -266,7 +293,8 @@ class EventController
 
     #[OA\Post(
         path: '/event/{id}',
-        summary: 'Perbarui event',
+        summary: 'Perbarui event (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Event'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -286,11 +314,16 @@ class EventController
             ),
             new OA\Response(response: 404, description: 'Event tidak ditemukan'),
             new OA\Response(response: 422, description: 'Judul wajib diisi'),
-            new OA\Response(response: 409, description: 'Event dengan judul tersebut sudah ada')
+            new OA\Response(response: 409, description: 'Event dengan judul tersebut sudah ada'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function update(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return;
+        }
         $existing = $this->event->find($id);
         if ($existing === null) {
             Response::json(['message' => 'Event tidak ditemukan'], 404);
@@ -354,18 +387,24 @@ class EventController
 
     #[OA\Delete(
         path: '/event/{id}',
-        summary: 'Hapus event',
+        summary: 'Hapus event (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Event'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Event berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Event tidak ditemukan')
+            new OA\Response(response: 404, description: 'Event tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return;
+        }
         try {
             $event = $this->event->find($id);
             if ($event === null) {

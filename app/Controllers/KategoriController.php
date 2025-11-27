@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Middleware\AuthMiddleware;
 use App\Models\Kategori;
 use Config\Database;
 use InvalidArgumentException;
@@ -130,7 +131,8 @@ class KategoriController
 
     #[OA\Post(
         path: '/kategori',
-        summary: 'Buat kategori baru',
+        summary: 'Buat kategori baru (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Kategori'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -142,11 +144,16 @@ class KategoriController
                 description: 'Kategori berhasil dibuat',
                 content: new OA\JsonContent(ref: '#/components/schemas/Kategori')
             ),
-            new OA\Response(response: 400, description: 'Permintaan tidak valid')
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function store(): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return;
+        }
         try {
             $payload = Request::json();
         } catch (InvalidArgumentException $exception) {
@@ -178,7 +185,8 @@ class KategoriController
 
     #[OA\Put(
         path: '/kategori/{id}',
-        summary: 'Perbarui kategori',
+        summary: 'Perbarui kategori (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Kategori'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
@@ -193,11 +201,16 @@ class KategoriController
                 description: 'Kategori berhasil diperbarui',
                 content: new OA\JsonContent(ref: '#/components/schemas/Kategori')
             ),
-            new OA\Response(response: 404, description: 'Kategori tidak ditemukan')
+            new OA\Response(response: 404, description: 'Kategori tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function update(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return;
+        }
         try {
             $payload = Request::json();
         } catch (InvalidArgumentException $exception) {
@@ -240,18 +253,24 @@ class KategoriController
 
     #[OA\Delete(
         path: '/kategori/{id}',
-        summary: 'Hapus kategori',
+        summary: 'Hapus kategori (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Kategori'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Kategori berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Kategori tidak ditemukan')
+            new OA\Response(response: 404, description: 'Kategori tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return;
+        }
         $deleted = $this->kategori->delete($id);
 
         if (!$deleted) {
