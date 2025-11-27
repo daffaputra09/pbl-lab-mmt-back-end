@@ -81,6 +81,21 @@
                             "type": "string",
                             "example": "Sekolah"
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter berdasarkan status berita (case-insensitive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "published",
+                                "draft",
+                                "archived"
+                            ],
+                            "example": "published"
+                        }
                     }
                 ],
                 "responses": {
@@ -289,7 +304,7 @@
                 "tags": [
                     "Berita"
                 ],
-                "summary": "Hapus entri berita",
+                "summary": "Hapus entri berita (requires authentication)",
                 "operationId": "5810d692c3d6bed43c2a19bfaabc61e3",
                 "parameters": [
                     {
@@ -307,8 +322,16 @@
                     },
                     "404": {
                         "description": "Entri berita tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/docs": {

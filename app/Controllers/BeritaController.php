@@ -50,6 +50,13 @@ class BeritaController
                 required: false,
                 description: 'Kata kunci pencarian untuk mencari berdasarkan title atau description',
                 schema: new OA\Schema(type: 'string', example: 'Sekolah')
+            ),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter berdasarkan status berita (case-insensitive)',
+                schema: new OA\Schema(type: 'string', enum: ['published', 'draft', 'archived'], example: 'published')
             )
         ],
         responses: [
@@ -69,6 +76,7 @@ class BeritaController
             $limitParam = Request::getQuery('limit', null);
             $limit = $limitParam !== null ? (int) $limitParam : null;
             $search = Request::getQuery('search', null);
+            $status = Request::getQuery('status', null);
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -80,10 +88,19 @@ class BeritaController
                 return;
             }
 
-            $total = $this->berita->count($search);
+            // Validate status if provided
+            if ($status !== null && trim($status) !== '') {
+                $validStatuses = ['published', 'draft', 'archived'];
+                if (!in_array(strtolower($status), array_map('strtolower', $validStatuses))) {
+                    Response::json(['message' => 'Status tidak valid. Status yang diizinkan: published, draft, archived'], 400);
+                    return;
+                }
+            }
+
+            $total = $this->berita->count($search, $status);
 
             if ($limit === null) {
-                $data = $this->berita->all($search);
+                $data = $this->berita->all($search, $status);
                 Response::json([
                     'data' => $data,
                     'pagination' => null
@@ -92,7 +109,7 @@ class BeritaController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->berita->paginate($page, $limit, $search);
+            $data = $this->berita->paginate($page, $limit, $search, $status);
 
             Response::json([
                 'data' => $data,
@@ -463,20 +480,25 @@ class BeritaController
     // DELETE
     #[OA\Delete(
         path: '/berita/{id}',
-        summary: 'Hapus entri berita',
+        summary: 'Hapus entri berita (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Berita'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Entri berita berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Entri berita tidak ditemukan')
+            new OA\Response(response: 404, description: 'Entri berita tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return; 
+        }
         try {
-            // Ambil data berita terlebih dahulu untuk mendapatkan image_url
             $entry = $this->berita->find($id);
             if ($entry === null) {
                 Response::json(['message' => 'Entri berita tidak ditemukan'], 404);

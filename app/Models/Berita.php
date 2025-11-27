@@ -14,78 +14,96 @@ class Berita
     {
     }
 
-    public function all(?string $search = null): array
+    public function all(?string $search = null, ?string $status = null): array
     {
+        $whereConditions = [];
+        $params = [];
+
         if ($search !== null && trim($search) !== '') {
-            $stmt = $this->db->prepare(
-                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
-                        u.id as user_id, u.name as user_name, u.email as user_email
-                 FROM berita b
-                 LEFT JOIN "user" u ON b.id_user = u.id
-                 WHERE b.judul ILIKE :search OR b.description ILIKE :search
-                 ORDER BY b.created_at DESC'
-            );
-            $stmt->execute(['search' => '%' . $search . '%']);
-        } else {
-            $stmt = $this->db->query(
-                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
-                        u.id as user_id, u.name as user_name, u.email as user_email
-                 FROM berita b
-                 LEFT JOIN "user" u ON b.id_user = u.id
-                 ORDER BY b.created_at DESC'
-            );
+            $whereConditions[] = '(b.judul ILIKE :search OR b.description ILIKE :search)';
+            $params['search'] = '%' . $search . '%';
         }
+
+        if ($status !== null && trim($status) !== '') {
+            $whereConditions[] = 'LOWER(b.status) = LOWER(:status)';
+            $params['status'] = $status;
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        $stmt = $this->db->prepare(
+            "SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                    u.id as user_id, u.name as user_name, u.email as user_email
+             FROM berita b
+             LEFT JOIN \"user\" u ON b.id_user = u.id
+             {$whereClause}
+             ORDER BY b.created_at DESC"
+        );
+
+        $stmt->execute($params);
         $results = $stmt->fetchAll();
         return array_map([$this, 'transformRow'], $results);
     }
 
-    public function paginate(int $page = 1, int $perPage = 10, ?string $search = null): array
+    public function paginate(int $page = 1, int $perPage = 10, ?string $search = null, ?string $status = null): array
     {
         $offset = ($page - 1) * $perPage;
         
+        $whereConditions = [];
+        $params = [];
+
         if ($search !== null && trim($search) !== '') {
-            $stmt = $this->db->prepare(
-                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
-                        u.id as user_id, u.name as user_name, u.email as user_email
-                 FROM berita b
-                 LEFT JOIN "user" u ON b.id_user = u.id
-                 WHERE b.judul ILIKE :search OR b.description ILIKE :search
-                 ORDER BY b.created_at DESC
-                 LIMIT :limit OFFSET :offset'
-            );
-            $stmt->bindValue(':search', '%' . $search . '%', \PDO::PARAM_STR);
-            $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-            $stmt->execute();
-        } else {
-            $stmt = $this->db->prepare(
-                'SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
-                        u.id as user_id, u.name as user_name, u.email as user_email
-                 FROM berita b
-                 LEFT JOIN "user" u ON b.id_user = u.id
-                 ORDER BY b.created_at DESC
-                 LIMIT :limit OFFSET :offset'
-            );
-            $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-            $stmt->execute();
+            $whereConditions[] = '(b.judul ILIKE :search OR b.description ILIKE :search)';
+            $params['search'] = '%' . $search . '%';
         }
+
+        if ($status !== null && trim($status) !== '') {
+            $whereConditions[] = 'LOWER(b.status) = LOWER(:status)';
+            $params['status'] = $status;
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        $stmt = $this->db->prepare(
+            "SELECT b.id, b.judul, b.description, b.image_url, b.id_user, b.status, b.created_at,
+                    u.id as user_id, u.name as user_name, u.email as user_email
+             FROM berita b
+             LEFT JOIN \"user\" u ON b.id_user = u.id
+             {$whereClause}
+             ORDER BY b.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value, \PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
         
         $results = $stmt->fetchAll();
         return array_map([$this, 'transformRow'], $results);
     }
 
-    public function count(?string $search = null): int
+    public function count(?string $search = null, ?string $status = null): int
     {
+        $whereConditions = [];
+        $params = [];
+
         if ($search !== null && trim($search) !== '') {
-            $stmt = $this->db->prepare(
-                'SELECT COUNT(*) FROM berita 
-                 WHERE judul ILIKE :search OR description ILIKE :search'
-            );
-            $stmt->execute(['search' => '%' . $search . '%']);
-        } else {
-            $stmt = $this->db->query('SELECT COUNT(*) FROM berita');
+            $whereConditions[] = '(judul ILIKE :search OR description ILIKE :search)';
+            $params['search'] = '%' . $search . '%';
         }
+
+        if ($status !== null && trim($status) !== '') {
+            $whereConditions[] = 'LOWER(status) = LOWER(:status)';
+            $params['status'] = $status;
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM berita {$whereClause}");
+        $stmt->execute($params);
         return (int) $stmt->fetchColumn();
     }
 
