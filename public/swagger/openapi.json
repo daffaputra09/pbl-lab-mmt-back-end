@@ -718,7 +718,7 @@
                 "tags": [
                     "Galeri"
                 ],
-                "summary": "Buat entri galeri baru",
+                "summary": "Buat entri galeri baru (requires authentication)",
                 "operationId": "64ba7fcc9e60924f3fccf2073941a391",
                 "requestBody": {
                     "required": true,
@@ -744,10 +744,18 @@
                     "400": {
                         "description": "Permintaan tidak valid"
                     },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
                     "500": {
                         "description": "Gagal membuat entri galeri"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/galeri/{id}": {
@@ -787,7 +795,7 @@
                 "tags": [
                     "Galeri"
                 ],
-                "summary": "Perbarui entri galeri",
+                "summary": "Perbarui entri galeri (requires authentication)",
                 "operationId": "7b7c1403beec2fb431932132c1d5a80f",
                 "parameters": [
                     {
@@ -825,14 +833,22 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
                     "Galeri"
                 ],
-                "summary": "Perbarui entri galeri (dengan upload file)",
+                "summary": "Perbarui entri galeri (dengan upload file, requires authentication)",
                 "operationId": "8884e3f1612c5d6ea512cac7d343f4ab",
                 "parameters": [
                     {
@@ -870,14 +886,22 @@
                     },
                     "400": {
                         "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Galeri"
                 ],
-                "summary": "Hapus entri galeri",
+                "summary": "Hapus entri galeri (requires authentication)",
                 "operationId": "99c182861694818c2d21857e24d41fe9",
                 "parameters": [
                     {
@@ -895,8 +919,16 @@
                     },
                     "404": {
                         "description": "Entri galeri tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/galeri/type/{type}": {
