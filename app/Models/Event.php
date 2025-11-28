@@ -53,7 +53,7 @@ class Event
         }
         
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
     public function paginate(int $page = 1, int $limit = 10, ?bool $sortByDate = null, ?string $search = null): array
@@ -108,7 +108,7 @@ class Event
         $stmt->execute();
         
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
     public function count(?string $search = null, ?bool $sortByDate = null): int
@@ -146,7 +146,7 @@ class Event
             return null;
         }
 
-        return $this->transformImageUrl($result);
+        return $this->transformRow($result);
     }
 
     public function create(string $judul, ?string $description = null, ?string $imageUrl = null, ?string $tanggalEvent = null): array
@@ -164,7 +164,7 @@ class Event
         ]);
 
         $result = $stmt->fetch();
-        return $this->transformImageUrl($result);
+        return $this->transformRow($result);
     }
 
     public function update(int $id, string $judul, ?string $description = null, ?string $imageUrl = null, ?string $tanggalEvent = null): ?array
@@ -189,7 +189,7 @@ class Event
             return null;
         }
 
-        return $this->transformImageUrl($result);
+        return $this->transformRow($result);
     }
 
     public function delete(int $id): bool
@@ -228,7 +228,7 @@ class Event
         $stmt->execute(['keyword' => "%{$keyword}%"]);
 
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
     public function recent(?int $limit = null): array
@@ -249,19 +249,28 @@ class Event
         }
 
         $results = $stmt->fetchAll();
-        return array_map([$this, 'transformImageUrl'], $results);
+        return array_map([$this, 'transformRow'], $results);
     }
 
-    private function transformImageUrl(array $row): array
+    private function transformRow(array $row): array
     {
+        // Transform image URL to full URL
         if (isset($row['image_url'])) {
             $row['image_url'] = FileUploadHelper::getFullUrl($row['image_url']);
         }
+        
+        // Transform 'judul' to 'title'
+        if (isset($row['judul'])) {
+            $row['title'] = $row['judul'];
+            unset($row['judul']);
+        }
+        
         return $row;
     }
 
     public function addEventStatus(array $row): array
     {
+        // Row sudah di-transform oleh transformRow sebelumnya, jadi langsung tambahkan status
         if ($row['tanggal_event'] === null) {
             $row['status'] = 'tidak_ditentukan';
         } else {

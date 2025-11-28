@@ -406,7 +406,7 @@
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Mencari event berdasarkan judul atau description (case insensitive)",
+                        "description": "Mencari event berdasarkan title atau description (case insensitive)",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -461,10 +461,10 @@
                         }
                     },
                     "422": {
-                        "description": "Judul wajib diisi"
+                        "description": "Title wajib diisi"
                     },
                     "409": {
-                        "description": "Event dengan judul tersebut sudah ada"
+                        "description": "Event dengan title tersebut sudah ada"
                     },
                     "401": {
                         "description": "Unauthorized - Token tidak valid"
@@ -513,11 +513,64 @@
                     }
                 }
             },
-            "post": {
+            "put": {
                 "tags": [
                     "Event"
                 ],
                 "summary": "Perbarui event (requires authentication)",
+                "operationId": "ec3b3569cae7526bd9a4ba3645a6de19",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Event berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Event tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Perbarui event (dengan upload gambar, requires authentication)",
                 "operationId": "6c90e3ea4c0d44994b83024860a6684d",
                 "parameters": [
                     {
@@ -553,11 +606,8 @@
                     "404": {
                         "description": "Event tidak ditemukan"
                     },
-                    "422": {
-                        "description": "Judul wajib diisi"
-                    },
-                    "409": {
-                        "description": "Event dengan judul tersebut sudah ada"
+                    "400": {
+                        "description": "Permintaan tidak valid"
                     },
                     "401": {
                         "description": "Unauthorized - Token tidak valid"
@@ -2137,7 +2187,7 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "judul": {
+                    "title": {
                         "type": "string",
                         "example": "Workshop PHP"
                     },
@@ -2173,10 +2223,11 @@
             },
             "EventCreateRequest": {
                 "required": [
-                    "judul"
+                    "title"
                 ],
                 "properties": {
-                    "judul": {
+                    "title": {
+                        "description": "Judul event (juga dapat menggunakan field \"judul\" untuk backward compatibility)",
                         "type": "string",
                         "example": "Webinar Terbaru"
                     },
@@ -2203,7 +2254,8 @@
             },
             "EventUpdateRequest": {
                 "properties": {
-                    "judul": {
+                    "title": {
+                        "description": "Judul event (juga dapat menggunakan field \"judul\" untuk backward compatibility)",
                         "type": "string",
                         "example": "Webinar Terbaru 2024"
                     },
@@ -2213,9 +2265,15 @@
                         "nullable": true
                     },
                     "image": {
-                        "description": "File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar",
+                        "description": "File gambar event (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar. Digunakan untuk multipart/form-data (POST)",
                         "type": "string",
                         "format": "binary",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "description": "URL gambar event. Digunakan untuk JSON (PUT)",
+                        "type": "string",
+                        "example": "/uploads/event/file_123.jpg",
                         "nullable": true
                     },
                     "tanggal_event": {

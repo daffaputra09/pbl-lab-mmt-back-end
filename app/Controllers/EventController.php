@@ -55,7 +55,7 @@ class EventController
                 name: 'search',
                 in: 'query',
                 required: false,
-                description: 'Mencari event berdasarkan judul atau description (case insensitive)',
+                description: 'Mencari event berdasarkan title atau description (case insensitive)',
                 schema: new OA\Schema(type: 'string', example: 'workshop')
             )
         ],
@@ -148,6 +148,9 @@ class EventController
                 return;
             }
 
+            // Tambahkan status ke event
+            $event = $this->event->addEventStatus($event);
+
             Response::json($event);
         } catch (PDOException $exception) {
             Response::json(['message' => 'Gagal mengambil data event', 'error' => $exception->getMessage()], 500);
@@ -172,7 +175,9 @@ class EventController
     public function recent(): void
     {
         try {
-            Response::json($this->event->recent(null));
+            $data = $this->event->recent(null);
+            $data = array_map([$this->event, 'addEventStatus'], $data);
+            Response::json($data);
         } catch (PDOException $exception) {
             Response::json(['message' => 'Gagal mengambil data event yang akan datang', 'error' => $exception->getMessage()], 500);
         }
@@ -203,7 +208,9 @@ class EventController
                 Response::json(['message' => 'Parameter limit harus lebih besar dari 0'], 400);
                 return;
             }
-            Response::json($this->event->recent($limit));
+            $data = $this->event->recent($limit);
+            $data = array_map([$this->event, 'addEventStatus'], $data);
+            Response::json($data);
         } catch (PDOException $exception) {
             Response::json(['message' => 'Gagal mengambil data event yang akan datang', 'error' => $exception->getMessage()], 500);
         }
@@ -229,8 +236,8 @@ class EventController
                 description: 'Event berhasil dibuat',
                 content: new OA\JsonContent(ref: '#/components/schemas/Event')
             ),
-            new OA\Response(response: 422, description: 'Judul wajib diisi'),
-            new OA\Response(response: 409, description: 'Event dengan judul tersebut sudah ada'),
+            new OA\Response(response: 422, description: 'Title wajib diisi'),
+            new OA\Response(response: 409, description: 'Event dengan title tersebut sudah ada'),
             new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid'),
             new OA\Response(response: 500, description: 'Gagal membuat event')
         ]
@@ -249,17 +256,18 @@ class EventController
             return;
         }
         
-        $judul = trim($formData['judul'] ?? '');
+        // Support both 'title' and 'judul' field names, prefer 'title'
+        $judul = trim($formData['title'] ?? $formData['judul'] ?? '');
         $description = trim($formData['description'] ?? '');
         $tanggalEvent = isset($formData['tanggal_event']) && $formData['tanggal_event'] !== '' ? trim($formData['tanggal_event']) : null;
 
         if ($judul === '') {
-            Response::json(['message' => 'Field judul wajib diisi'], 422);
+            Response::json(['message' => 'Field title wajib diisi'], 422);
             return;
         }
 
         if ($this->event->judulExists($judul)) {
-            Response::json(['message' => 'Event dengan judul tersebut sudah ada'], 409);
+            Response::json(['message' => 'Event dengan title tersebut sudah ada'], 409);
             return;
         }
 
@@ -291,9 +299,32 @@ class EventController
 
     // UPDATE
 
-    #[OA\Post(
+    #[OA\Put(
         path: '/event/{id}',
         summary: 'Perbarui event (requires authentication)',
+        security: [['bearerAuth' => []]],
+        tags: ['Event'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/EventUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Event berhasil diperbarui',
+                content: new OA\JsonContent(ref: '#/components/schemas/Event')
+            ),
+            new OA\Response(response: 404, description: 'Event tidak ditemukan'),
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
+        ]
+    )]
+    #[OA\Post(
+        path: '/event/{id}',
+        summary: 'Perbarui event (dengan upload gambar, requires authentication)',
         security: [['bearerAuth' => []]],
         tags: ['Event'],
         parameters: [
@@ -313,8 +344,7 @@ class EventController
                 content: new OA\JsonContent(ref: '#/components/schemas/Event')
             ),
             new OA\Response(response: 404, description: 'Event tidak ditemukan'),
-            new OA\Response(response: 422, description: 'Judul wajib diisi'),
-            new OA\Response(response: 409, description: 'Event dengan judul tersebut sudah ada'),
+            new OA\Response(response: 400, description: 'Permintaan tidak valid'),
             new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
@@ -330,53 +360,118 @@ class EventController
             return;
         }
 
-        $formData = Request::getFormData();
-
-        $judul = isset($formData['judul']) ? trim($formData['judul']) : $existing['judul'];
-        $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
-        $tanggalEvent = isset($formData['tanggal_event']) && $formData['tanggal_event'] !== '' ? trim($formData['tanggal_event']) : ($existing['tanggal_event'] ?? null);
-        $imageUrl = FileUploadHelper::getRelativePath($existing['image_url']);
-
-        $newImageUrl = null;
-        if (Request::hasFile('image')) {
+        // Jika request multipart (upload file)
+        if (Request::isMultipart()) {
             try {
-                $file = Request::getFile('image');
-                $newImageUrl = FileUploadHelper::uploadImage($file, 'uploads/event');
-                if ($imageUrl) {
-                    FileUploadHelper::deleteFile($imageUrl);
-                }
-                $imageUrl = $newImageUrl;
+                $formData = Request::getFormData();
             } catch (InvalidArgumentException $exception) {
-                Response::json(['message' => 'Gagal upload gambar: ' . $exception->getMessage()], 400);
+                Response::json(['message' => $exception->getMessage()], 400);
                 return;
             }
+
+            // Support both 'title' and 'judul' field names, prefer 'title'
+            // Also handle existing data which now has 'title' instead of 'judul'
+            $existingTitle = $existing['title'] ?? $existing['judul'] ?? '';
+            $judul = isset($formData['title']) ? trim($formData['title']) : (isset($formData['judul']) ? trim($formData['judul']) : $existingTitle);
+            $description = isset($formData['description']) ? trim($formData['description']) : $existing['description'];
+            $tanggalEvent = isset($formData['tanggal_event']) && $formData['tanggal_event'] !== '' ? trim($formData['tanggal_event']) : ($existing['tanggal_event'] ?? null);
+            $imageUrl = FileUploadHelper::getRelativePath($existing['image_url']);
+
+            $newImageUrl = null;
+            if (Request::hasFile('image')) {
+                try {
+                    $file = Request::getFile('image');
+                    if ($file === null) {
+                        Response::json(['message' => 'File image tidak ditemukan.'], 400);
+                        return;
+                    }
+                    $newImageUrl = FileUploadHelper::uploadImage($file, 'uploads/event');
+                    if ($imageUrl) {
+                        FileUploadHelper::deleteFile($imageUrl);
+                    }
+                    $imageUrl = $newImageUrl;
+                } catch (InvalidArgumentException $exception) {
+                    Response::json(['message' => 'Gagal upload gambar: ' . $exception->getMessage()], 400);
+                    return;
+                }
+            }
+
+            $judul = trim($judul);
+            $description = $description ? trim($description) : null;
+
+            if ($judul === '') {
+                Response::json(['message' => 'Field title wajib diisi'], 422);
+                return;
+            }
+
+            if ($this->event->judulExists($judul, $id)) {
+                Response::json(['message' => 'Event dengan title tersebut sudah ada'], 409);
+                return;
+            }
+
+            try {
+                $event = $this->event->update($id, $judul, $description, $imageUrl, $tanggalEvent);
+            } catch (PDOException $exception) {
+                if ($newImageUrl) {
+                    FileUploadHelper::deleteFile($newImageUrl);
+                }
+                Response::json(['message' => 'Gagal memperbarui event', 'error' => $exception->getMessage()], 500);
+                return;
+            }
+
+            if ($event === null) {
+                Response::json(['message' => 'Event tidak ditemukan saat update'], 404);
+                return;
+            }
+
+            Response::json($event);
+            return;
         }
 
-        $judul = trim($judul);
-        $description = $description ? trim($description) : null;
+        // Fallback: dukung format JSON (image_url string)
+        try {
+            $payload = Request::json();
+        } catch (InvalidArgumentException $exception) {
+            Response::json(['message' => $exception->getMessage()], 400);
+            return;
+        }
 
-        if ($judul === '') {
-            Response::json(['message' => 'Field judul wajib diisi'], 422);
+        $mergedPayload = array_merge($existing, $payload);
+
+        try {
+            $data = $this->validatePayload($mergedPayload, true);
+        } catch (InvalidArgumentException $exception) {
+            Response::json(['message' => $exception->getMessage()], 400);
+            return;
+        }
+
+        $existingTitle = $existing['title'] ?? $existing['judul'] ?? null;
+        $judul = $data['title'] ?? $data['judul'] ?? $existingTitle;
+        $description = $data['description'] ?? $existing['description'];
+        $imageUrl = isset($data['image_url']) 
+            ? FileUploadHelper::getRelativePath($data['image_url']) 
+            : FileUploadHelper::getRelativePath($existing['image_url']);
+        $tanggalEvent = $data['tanggal_event'] ?? $existing['tanggal_event'] ?? null;
+
+        if ($judul === null || $judul === '') {
+            Response::json(['message' => 'Title tidak boleh kosong.'], 400);
             return;
         }
 
         if ($this->event->judulExists($judul, $id)) {
-            Response::json(['message' => 'Event dengan judul tersebut sudah ada'], 409);
+            Response::json(['message' => 'Event dengan title tersebut sudah ada'], 409);
             return;
         }
 
         try {
             $event = $this->event->update($id, $judul, $description, $imageUrl, $tanggalEvent);
         } catch (PDOException $exception) {
-            if ($newImageUrl) {
-                FileUploadHelper::deleteFile($newImageUrl);
-            }
             Response::json(['message' => 'Gagal memperbarui event', 'error' => $exception->getMessage()], 500);
             return;
         }
 
         if ($event === null) {
-            Response::json(['message' => 'Gagal memperbarui event'], 500); 
+            Response::json(['message' => 'Event tidak ditemukan saat update'], 404);
             return;
         }
 
@@ -427,5 +522,26 @@ class EventController
             return;
         }
         Response::empty(204);
+    }
+
+    // VALIDASI PAYLOAD
+    private function validatePayload(array $payload, bool $isUpdate = false): array
+    {
+        // Support both 'title' and 'judul' field names
+        $title = $payload['title'] ?? $payload['judul'] ?? null;
+        
+        if (!$isUpdate) {
+            if (empty($title)) {
+                throw new InvalidArgumentException("Kolom title wajib diisi.");
+            }
+        }
+
+        return [
+            'title' => $title,
+            'judul' => $title, // Keep for backward compatibility
+            'description' => $payload['description'] ?? null,
+            'image_url' => $payload['image_url'] ?? null,
+            'tanggal_event' => $payload['tanggal_event'] ?? null,
+        ];
     }
 }
