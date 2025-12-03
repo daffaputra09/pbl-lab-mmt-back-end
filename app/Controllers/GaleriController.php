@@ -71,6 +71,13 @@ class GaleriController
                 required: false,
                 description: 'Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.',
                 schema: new OA\Schema(type: 'integer', minimum: 1, example: 10)
+            ),
+            new OA\Parameter(
+                name: 'type',
+                in: 'query',
+                required: false,
+                description: 'Filter berdasarkan tipe galeri (case-insensitive)',
+                schema: new OA\Schema(type: 'string', enum: ['foto', 'video', 'lottie'], example: 'foto')
             )
         ],
         responses: [
@@ -89,6 +96,8 @@ class GaleriController
             $page = (int) Request::getQuery('page', 1);
             $limitParam = Request::getQuery('limit', null);
             $limit = $limitParam !== null ? (int) $limitParam : null;
+            $type = Request::getQuery('type', null);
+            $type = $type !== null && $type !== '' ? trim($type) : null;
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -100,10 +109,20 @@ class GaleriController
                 return;
             }
 
-            $total = $this->galeri->count();
+            // Validate type if provided
+            if ($type !== null && trim($type) !== '') {
+                $typeLower = strtolower($type);
+                if (!in_array($typeLower, self::ALLOWED_TYPES)) {
+                    Response::json(['message' => 'Tipe galeri tidak valid. Gunakan "foto", "video", atau "lottie".'], 400);
+                    return;
+                }
+                $type = $typeLower;
+            }
+
+            $total = $this->galeri->count($type);
 
             if ($limit === null) {
-                $data = $this->galeri->all();
+                $data = $this->galeri->all($type);
                 Response::json([
                     'data' => $data,
                     'pagination' => null
@@ -112,7 +131,7 @@ class GaleriController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->galeri->paginate($page, $limit);
+            $data = $this->galeri->paginate($page, $limit, $type);
 
             Response::json([
                 'data' => $data,

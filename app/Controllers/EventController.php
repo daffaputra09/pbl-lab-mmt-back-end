@@ -57,6 +57,13 @@ class EventController
                 required: false,
                 description: 'Mencari event berdasarkan title atau description (case insensitive)',
                 schema: new OA\Schema(type: 'string', example: 'workshop')
+            ),
+            new OA\Parameter(
+                name: 'status',
+                in: 'query',
+                required: false,
+                description: 'Filter berdasarkan status event (case-insensitive)',
+                schema: new OA\Schema(type: 'string', enum: ['terlewat', 'akan_datang', 'tidak_ditentukan'], example: 'akan_datang')
             )
         ],
         responses: [
@@ -79,6 +86,8 @@ class EventController
             $sortByDate = $sortByDateParam !== null ? filter_var($sortByDateParam, FILTER_VALIDATE_BOOLEAN) : null;
             $search = Request::getQuery('search', null);
             $search = $search !== null && $search !== '' ? trim($search) : null;
+            $status = Request::getQuery('status', null);
+            $status = $status !== null && $status !== '' ? trim($status) : null;
 
             if ($page < 1) {
                 Response::json(['message' => 'Parameter page harus lebih besar dari 0'], 400);
@@ -90,10 +99,19 @@ class EventController
                 return;
             }
 
-            $total = $this->event->count($search, $sortByDate);
+            // Validate status if provided
+            if ($status !== null && trim($status) !== '') {
+                $validStatuses = ['terlewat', 'akan_datang', 'tidak_ditentukan'];
+                if (!in_array(strtolower($status), array_map('strtolower', $validStatuses))) {
+                    Response::json(['message' => 'Status tidak valid. Status yang diizinkan: terlewat, akan_datang, tidak_ditentukan'], 400);
+                    return;
+                }
+            }
+
+            $total = $this->event->count($search, $sortByDate, $status);
 
             if ($limit === null) {
-                $data = $this->event->all($sortByDate, $search);
+                $data = $this->event->all($sortByDate, $search, $status);
                 $data = array_map([$this->event, 'addEventStatus'], $data);
                 Response::json([
                     'data' => $data,
@@ -103,7 +121,7 @@ class EventController
             }
 
             $totalPages = (int) ceil($total / $limit);
-            $data = $this->event->paginate($page, $limit, $sortByDate, $search);
+            $data = $this->event->paginate($page, $limit, $sortByDate, $search, $status);
             $data = array_map([$this->event, 'addEventStatus'], $data);
 
             Response::json([

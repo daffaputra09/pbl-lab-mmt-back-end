@@ -14,27 +14,51 @@ class Galeri
     {
     }
 
-    public function all(): array
+    public function all(?string $type = null): array
     {
-        $stmt = $this->db->query(
-            'SELECT id, type, file_url, tanggal_kegiatan, created_at 
-             FROM galeri 
-             ORDER BY created_at DESC'
-        );
+        $query = 'SELECT id, type, file_url, tanggal_kegiatan, created_at 
+                  FROM galeri';
+        $params = [];
+        
+        if ($type !== null && $type !== '') {
+            $query .= ' WHERE LOWER(type) = LOWER(:type)';
+            $params['type'] = $type;
+        }
+        
+        $query .= ' ORDER BY created_at DESC';
+        
+        if (!empty($params)) {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        } else {
+            $stmt = $this->db->query($query);
+        }
+        
         $results = $stmt->fetchAll();
         return array_map([$this, 'transformFileUrl'], $results);
     }
 
-    public function paginate(int $page = 1, int $limit = 10): array
+    public function paginate(int $page = 1, int $limit = 10, ?string $type = null): array
     {
         $offset = ($page - 1) * $limit;
         
-        $stmt = $this->db->prepare(
-            'SELECT id, type, file_url, tanggal_kegiatan, created_at 
-             FROM galeri 
-             ORDER BY created_at DESC
-             LIMIT :limit OFFSET :offset'
-        );
+        $query = 'SELECT id, type, file_url, tanggal_kegiatan, created_at 
+                  FROM galeri';
+        $params = [];
+        
+        if ($type !== null && $type !== '') {
+            $query .= ' WHERE LOWER(type) = LOWER(:type)';
+            $params['type'] = $type;
+        }
+        
+        $query .= ' ORDER BY created_at DESC
+                    LIMIT :limit OFFSET :offset';
+        
+        $stmt = $this->db->prepare($query);
+        
+        if (isset($params['type'])) {
+            $stmt->bindValue(':type', $params['type'], \PDO::PARAM_STR);
+        }
         $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -43,9 +67,23 @@ class Galeri
         return array_map([$this, 'transformFileUrl'], $results);
     }
 
-    public function count(): int
+    public function count(?string $type = null): int
     {
-        $stmt = $this->db->query('SELECT COUNT(*) FROM galeri');
+        $query = 'SELECT COUNT(*) FROM galeri';
+        $params = [];
+        
+        if ($type !== null && $type !== '') {
+            $query .= ' WHERE LOWER(type) = LOWER(:type)';
+            $params['type'] = $type;
+        }
+        
+        if (!empty($params)) {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+        } else {
+            $stmt = $this->db->query($query);
+        }
+        
         return (int) $stmt->fetchColumn();
     }
 

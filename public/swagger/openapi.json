@@ -412,6 +412,21 @@
                             "type": "string",
                             "example": "workshop"
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter berdasarkan status event (case-insensitive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "terlewat",
+                                "akan_datang",
+                                "tidak_ditentukan"
+                            ],
+                            "example": "akan_datang"
+                        }
                     }
                 ],
                 "responses": {
@@ -742,6 +757,21 @@
                             "type": "integer",
                             "minimum": 1,
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter berdasarkan tipe galeri (case-insensitive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "foto",
+                                "video",
+                                "lottie"
+                            ],
+                            "example": "foto"
                         }
                     }
                 ],

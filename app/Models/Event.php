@@ -14,7 +14,7 @@ class Event
     {
     }
 
-    public function all(?bool $sortByDate = null, ?string $search = null): array
+    public function all(?bool $sortByDate = null, ?string $search = null, ?string $status = null): array
     {
         $query = 'SELECT id, image_url, judul, description, tanggal_event FROM event';
         $params = [];
@@ -23,6 +23,18 @@ class Event
         if ($search !== null && $search !== '') {
             $whereConditions[] = '(LOWER(judul) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))';
             $params['search'] = "%{$search}%";
+        }
+        
+        // Filter by status
+        if ($status !== null && $status !== '') {
+            $statusLower = strtolower($status);
+            if ($statusLower === 'terlewat') {
+                $whereConditions[] = 'tanggal_event < CURRENT_DATE';
+            } elseif ($statusLower === 'akan_datang') {
+                $whereConditions[] = 'tanggal_event >= CURRENT_DATE';
+            } elseif ($statusLower === 'tidak_ditentukan') {
+                $whereConditions[] = 'tanggal_event IS NULL';
+            }
         }
         
         if (!empty($whereConditions)) {
@@ -56,7 +68,7 @@ class Event
         return array_map([$this, 'transformRow'], $results);
     }
 
-    public function paginate(int $page = 1, int $limit = 10, ?bool $sortByDate = null, ?string $search = null): array
+    public function paginate(int $page = 1, int $limit = 10, ?bool $sortByDate = null, ?string $search = null, ?string $status = null): array
     {
         $offset = ($page - 1) * $limit;
         
@@ -68,6 +80,18 @@ class Event
         if ($search !== null && $search !== '') {
             $whereConditions[] = '(LOWER(judul) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))';
             $params['search'] = "%{$search}%";
+        }
+        
+        // Filter by status
+        if ($status !== null && $status !== '') {
+            $statusLower = strtolower($status);
+            if ($statusLower === 'terlewat') {
+                $whereConditions[] = 'tanggal_event < CURRENT_DATE';
+            } elseif ($statusLower === 'akan_datang') {
+                $whereConditions[] = 'tanggal_event >= CURRENT_DATE';
+            } elseif ($statusLower === 'tidak_ditentukan') {
+                $whereConditions[] = 'tanggal_event IS NULL';
+            }
         }
         
         if (!empty($whereConditions)) {
@@ -111,7 +135,7 @@ class Event
         return array_map([$this, 'transformRow'], $results);
     }
 
-    public function count(?string $search = null, ?bool $sortByDate = null): int
+    public function count(?string $search = null, ?bool $sortByDate = null, ?string $status = null): int
     {
         $query = 'SELECT COUNT(*) FROM event';
         $params = [];
@@ -120,6 +144,18 @@ class Event
         if ($search !== null && $search !== '') {
             $whereConditions[] = '(LOWER(judul) LIKE LOWER(:search) OR LOWER(description) LIKE LOWER(:search))';
             $params['search'] = "%{$search}%";
+        }
+        
+        // Filter by status
+        if ($status !== null && $status !== '') {
+            $statusLower = strtolower($status);
+            if ($statusLower === 'terlewat') {
+                $whereConditions[] = 'tanggal_event < CURRENT_DATE';
+            } elseif ($statusLower === 'akan_datang') {
+                $whereConditions[] = 'tanggal_event >= CURRENT_DATE';
+            } elseif ($statusLower === 'tidak_ditentukan') {
+                $whereConditions[] = 'tanggal_event IS NULL';
+            }
         }
         
         if (!empty($whereConditions)) {
