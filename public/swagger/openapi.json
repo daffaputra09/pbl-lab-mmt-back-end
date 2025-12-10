@@ -1,6 +1,284 @@
 {
     "openapi": "3.0.0",
     "paths": {
+        "/anggota": {
+            "get": {
+                "tags": [
+                    "Anggota"
+                ],
+                "summary": "List semua anggota dengan pagination",
+                "operationId": "38c4095d20b3fb4f0f43c52cba88ecae",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search anggota berdasarkan nama (case-insensitive, partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "John"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar anggota dengan pagination",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AnggotaPaginatedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data anggota"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Anggota"
+                ],
+                "summary": "Buat anggota baru (requires authentication)",
+                "operationId": "65e4b68d6fe5c4fa9b9a1e1bde104e42",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnggotaCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Anggota berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Anggota"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Nama wajib diisi"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat anggota"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/anggota/{id}": {
+            "get": {
+                "tags": [
+                    "Anggota"
+                ],
+                "summary": "Detail anggota",
+                "operationId": "f9702c4e8964155459e5b97ba69b7e01",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail anggota",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Anggota"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Anggota tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Anggota"
+                ],
+                "summary": "Perbarui anggota (requires authentication)",
+                "operationId": "f4fc9fe108ba361685f277cf72b45528",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnggotaUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Anggota berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Anggota"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Anggota tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Anggota"
+                ],
+                "summary": "Perbarui anggota (dengan upload gambar, requires authentication)",
+                "operationId": "e2f96d300304d259d168a67017cca426",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnggotaUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Anggota berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Anggota"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Anggota tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Anggota"
+                ],
+                "summary": "Hapus anggota (requires authentication)",
+                "operationId": "77535f84ca3e936da6e6eec14a725d66",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Anggota berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Anggota tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/auth/login": {
             "post": {
                 "tags": [
@@ -1748,7 +2026,7 @@
                 "tags": [
                     "Rating"
                 ],
-                "summary": "Hapus entri rating",
+                "summary": "Hapus entri rating (requires authentication)",
                 "operationId": "6cacc904204e2c569c2a28ec28a495d8",
                 "parameters": [
                     {
@@ -1766,8 +2044,16 @@
                     },
                     "404": {
                         "description": "Entri rating tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/tag": {
@@ -2051,6 +2337,261 @@
     },
     "components": {
         "schemas": {
+            "Anggota": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "Full Stack Developer",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://example.com/uploads/anggota/file_123.jpg",
+                        "nullable": true
+                    },
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "PHP",
+                            "JavaScript",
+                            "React",
+                            "Node.js"
+                        ],
+                        "nullable": true
+                    },
+                    "media_social": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "url",
+                                "type"
+                            ],
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "example": "https://github.com/johndoe"
+                                },
+                                "type": {
+                                    "description": "Jenis media social (contoh: github, linkedin, twitter, instagram, dll)",
+                                    "type": "string",
+                                    "example": "github"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "example": [
+                            {
+                                "url": "https://github.com/johndoe",
+                                "type": "github"
+                            },
+                            {
+                                "url": "https://linkedin.com/in/johndoe",
+                                "type": "linkedin"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AnggotaCreateRequest": {
+                "required": [
+                    "nama"
+                ],
+                "properties": {
+                    "nama": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "Full Stack Developer",
+                        "nullable": true
+                    },
+                    "image": {
+                        "description": "File gambar anggota (JPG, PNG, GIF, WEBP, max 5MB)",
+                        "type": "string",
+                        "format": "binary",
+                        "nullable": true
+                    },
+                    "skills": {
+                        "description": "Array of skills. Can be sent as JSON string or array in multipart/form-data",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "PHP",
+                            "JavaScript",
+                            "React"
+                        ],
+                        "nullable": true
+                    },
+                    "media_social": {
+                        "description": "Array of social media objects. Each object must have url and type. Can be sent as JSON string or array in multipart/form-data",
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "url",
+                                "type"
+                            ],
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "example": "https://github.com/johndoe"
+                                },
+                                "type": {
+                                    "description": "Jenis media social (contoh: github, linkedin, twitter, instagram, dll)",
+                                    "type": "string",
+                                    "example": "github"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "example": [
+                            {
+                                "url": "https://github.com/johndoe",
+                                "type": "github"
+                            },
+                            {
+                                "url": "https://linkedin.com/in/johndoe",
+                                "type": "linkedin"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AnggotaUpdateRequest": {
+                "properties": {
+                    "nama": {
+                        "type": "string",
+                        "example": "John Doe Updated"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "Senior Full Stack Developer",
+                        "nullable": true
+                    },
+                    "image": {
+                        "description": "File gambar anggota (JPG, PNG, GIF, WEBP, max 5MB). Opsional - hanya upload jika ingin mengubah gambar",
+                        "type": "string",
+                        "format": "binary",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "description": "URL gambar anggota. Digunakan untuk JSON (PUT)",
+                        "type": "string",
+                        "example": "/uploads/anggota/file_123.jpg",
+                        "nullable": true
+                    },
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "PHP",
+                            "JavaScript",
+                            "React",
+                            "Node.js",
+                            "TypeScript"
+                        ],
+                        "nullable": true
+                    },
+                    "media_social": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "url",
+                                "type"
+                            ],
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "example": "https://github.com/johndoe"
+                                },
+                                "type": {
+                                    "description": "Jenis media social (contoh: github, linkedin, twitter, instagram, dll)",
+                                    "type": "string",
+                                    "example": "github"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "example": [
+                            {
+                                "url": "https://github.com/johndoe",
+                                "type": "github"
+                            },
+                            {
+                                "url": "https://linkedin.com/in/johndoe",
+                                "type": "linkedin"
+                            },
+                            {
+                                "url": "https://twitter.com/johndoe",
+                                "type": "twitter"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AnggotaPaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Anggota"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 100
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Berita": {
                 "properties": {
                     "id": {
@@ -2639,6 +3180,13 @@
                         "items": {
                             "$ref": "#/components/schemas/Tag"
                         }
+                    },
+                    "anggota": {
+                        "description": "Daftar anggota yang terkait dengan project ini",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Anggota"
+                        }
                     }
                 },
                 "type": "object"
@@ -2696,6 +3244,19 @@
                             "completed"
                         ],
                         "example": "on_progress"
+                    },
+                    "id_anggota": {
+                        "description": "Array of anggota IDs. Opsional - untuk multipart/form-data, gunakan field name \"id_anggota[]\" atau kirim sebagai array.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -2759,6 +3320,19 @@
                             "completed"
                         ],
                         "example": "completed"
+                    },
+                    "id_anggota": {
+                        "description": "Array of anggota IDs. Opsional - untuk multipart/form-data, gunakan field name \"id_anggota[]\" atau kirim sebagai array.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -3132,6 +3706,9 @@
         }
     },
     "tags": [
+        {
+            "name": "Anggota"
+        },
         {
             "name": "Auth"
         },

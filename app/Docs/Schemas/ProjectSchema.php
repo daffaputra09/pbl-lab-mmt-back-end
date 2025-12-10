@@ -32,6 +32,12 @@ use OpenApi\Attributes as OA;
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Tag'),
             description: 'Daftar tag yang terkait dengan project ini (berisi id dan name)'
+        ),
+        new OA\Property(
+            property: 'anggota',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Anggota'),
+            description: 'Daftar anggota yang terkait dengan project ini'
         )
     ]
 )]
@@ -71,7 +77,15 @@ class ProjectSchema
             nullable: true,
             description: 'Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Opsional - upload multiple images untuk project. Gunakan field name "images[]" saat upload.'
         ),
-        new OA\Property(property: 'status', type: 'string', example: 'on_progress', enum: ['on_progress','completed'])
+        new OA\Property(property: 'status', type: 'string', example: 'on_progress', enum: ['on_progress','completed']),
+        new OA\Property(
+            property: 'id_anggota',
+            type: 'array',
+            nullable: true,
+            items: new OA\Items(type: 'integer'),
+            description: 'Array of anggota IDs. Opsional - untuk multipart/form-data, gunakan field name "id_anggota[]" atau kirim sebagai array.',
+            example: [1, 2, 3]
+        )
     ]
 )]
 class ProjectCreateRequest
@@ -117,7 +131,15 @@ class ProjectCreateRequest
             nullable: true,
             description: 'Array of image files (JPG, PNG, GIF, WEBP, max 100MB each). Wajib diisi jika image_url kosong atau tidak dikirim. Jika image_url dikirim, images bersifat opsional untuk menambahkan foto baru. Foto baru akan digabungkan dengan image_url yang dikirim. Gunakan field name "images[]" saat upload.'
         ),
-        new OA\Property(property: 'status', type: 'string', example: 'completed', enum: ['on_progress','completed'])
+        new OA\Property(property: 'status', type: 'string', example: 'completed', enum: ['on_progress','completed']),
+        new OA\Property(
+            property: 'id_anggota',
+            type: 'array',
+            nullable: true,
+            items: new OA\Items(type: 'integer'),
+            description: 'Array of anggota IDs. Opsional - untuk multipart/form-data, gunakan field name "id_anggota[]" atau kirim sebagai array.',
+            example: [1, 2, 3]
+        )
     ]
 )]
 class ProjectUpdateRequest

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Middleware\AuthMiddleware;
 use App\Models\Rating;
 use Config\Database;
 use InvalidArgumentException;
@@ -274,18 +275,25 @@ class RatingController
 
     #[OA\Delete(
         path: '/rating/{id}',
-        summary: 'Hapus entri rating',
+        summary: 'Hapus entri rating (requires authentication)',
+        security: [['bearerAuth' => []]],
         tags: ['Rating'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
             new OA\Response(response: 204, description: 'Entri rating berhasil dihapus'),
-            new OA\Response(response: 404, description: 'Entri rating tidak ditemukan')
+            new OA\Response(response: 404, description: 'Entri rating tidak ditemukan'),
+            new OA\Response(response: 401, description: 'Unauthorized - Token tidak valid')
         ]
     )]
     public function destroy(int $id): void
     {
+        $tokenData = AuthMiddleware::verify();
+        if ($tokenData === null) {
+            return;
+        }
+
         try {
             $deleted = $this->rating->delete($id);
             if (!$deleted) {

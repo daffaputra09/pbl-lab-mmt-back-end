@@ -84,9 +84,31 @@ CREATE TABLE event (
     tanggal_event DATE
 );
 
+-- Table: Anggota
+CREATE TABLE anggota (
+    id SERIAL PRIMARY KEY,
+    nama TEXT NOT NULL,
+    role TEXT,
+    image_url TEXT,
+    skills TEXT[],
+    media_social TEXT[]
+);
+
+-- Table: Project_Anggota (Junction table)
+CREATE TABLE project_anggota (
+    id SERIAL PRIMARY KEY,
+    id_project INTEGER NOT NULL,
+    id_anggota INTEGER NOT NULL,
+    UNIQUE(id_project, id_anggota),
+    FOREIGN KEY (id_project) REFERENCES project(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_anggota) REFERENCES anggota(id) ON DELETE CASCADE
+);
+
 -- Create indexes 
 CREATE INDEX idx_project_kategori ON project(id_kategori);
 CREATE INDEX idx_rating_project ON rating(id_project);
 CREATE INDEX idx_project_tag_project ON project_tag(id_project);
 CREATE INDEX idx_project_tag_tag ON project_tag(id_tag);
 CREATE INDEX idx_berita_user ON berita(id_user);
+CREATE INDEX idx_project_anggota_project ON project_anggota(id_project);
+CREATE INDEX idx_project_anggota_anggota ON project_anggota(id_anggota);

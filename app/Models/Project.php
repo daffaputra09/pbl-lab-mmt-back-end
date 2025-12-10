@@ -60,6 +60,7 @@ class Project
         $results = array_map([$this, 'parseImageUrl'], $results);
         return array_map(function($row) {
             $row['tags'] = $this->getTags($row['id']);
+            $row['anggota'] = $this->getAnggota($row['id']);
             $kategori = $this->getKategori($row['id_kategori']);
             $row['kategori'] = $kategori ?: ['id' => $row['id_kategori'], 'name' => null];
             return $row;
@@ -182,6 +183,7 @@ class Project
 
         $result = $this->parseImageUrl($result);
         $result['tags'] = $this->getTags($id);
+        $result['anggota'] = $this->getAnggota($id);
         $kategori = $this->getKategori($result['id_kategori']);
         $result['kategori'] = $kategori ?: ['id' => $result['id_kategori'], 'name' => null];
         return $result;
@@ -225,6 +227,56 @@ class Project
         return $result ?: null;
     }
 
+    public function getAnggota(int $projectId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT a.id, a.nama, a.role, a.image_url, a.skills, a.media_social 
+             FROM anggota a 
+             INNER JOIN project_anggota pa ON a.id = pa.id_anggota 
+             WHERE pa.id_project = :project_id 
+             ORDER BY a.nama'
+        );
+        $stmt->execute(['project_id' => $projectId]);
+        $results = $stmt->fetchAll();
+        
+        // Transform image_url and parse arrays
+        return array_map(function($row) {
+            if (isset($row['image_url'])) {
+                $row['image_url'] = FileUploadHelper::getFullUrl($row['image_url']);
+            }
+            
+            // Parse PostgreSQL arrays for skills
+            if (isset($row['skills']) && $row['skills'] !== null) {
+                $row['skills'] = $this->parsePostgresArray($row['skills']);
+            }
+            
+            // Parse PostgreSQL arrays for media_social (array of JSON objects)
+            if (isset($row['media_social']) && $row['media_social'] !== null) {
+                $row['media_social'] = $this->parseMediaSocialArray($row['media_social']);
+            }
+            
+            return $row;
+        }, $results);
+    }
+
+    public function syncAnggota(int $projectId, array $anggotaIds): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM project_anggota WHERE id_project = :project_id');
+        $stmt->execute(['project_id' => $projectId]);
+
+        if (!empty($anggotaIds)) {
+            $stmt = $this->db->prepare(
+                'INSERT INTO project_anggota (id_project, id_anggota) VALUES (:project_id, :anggota_id)'
+            );
+            foreach ($anggotaIds as $anggotaId) {
+                $stmt->execute([
+                    'project_id' => $projectId,
+                    'anggota_id' => (int) $anggotaId,
+                ]);
+            }
+        }
+    }
+
     public function syncTags(int $projectId, array $tagIds): void
     {
         $stmt = $this->db->prepare('DELETE FROM project_tag WHERE id_project = :project_id');
@@ -250,7 +302,8 @@ class Project
         ?string $videoUrl,
         array $imageUrls,
         string $status = 'on_progress',
-        array $tagIds = []
+        array $tagIds = [],
+        array $anggotaIds = []
     ): array {
         $imageUrlsSql = '{' . implode(',', array_map(fn($u) => '"' . $u . '"', $imageUrls)) . '}';
 
@@ -273,7 +326,9 @@ class Project
         $result = $this->parseImageUrl($result);
         
         $this->syncTags($result['id'], $tagIds);
+        $this->syncAnggota($result['id'], $anggotaIds);
         $result['tags'] = $this->getTags($result['id']);
+        $result['anggota'] = $this->getAnggota($result['id']);
         
         $kategori = $this->getKategori($result['id_kategori']);
         $result['kategori'] = $kategori ?: ['id' => $result['id_kategori'], 'name' => null];
@@ -289,7 +344,8 @@ class Project
         ?string $videoUrl,
         array $imageUrls,
         string $status,
-        array $tagIds = []
+        array $tagIds = [],
+        array $anggotaIds = []
     ): ?array {
         $imageUrlsSql = '{' . implode(',', array_map(fn($u) => '"' . $u . '"', $imageUrls)) . '}';
 
@@ -322,7 +378,9 @@ class Project
         $result = $this->parseImageUrl($result);
         
         $this->syncTags($id, $tagIds);
+        $this->syncAnggota($id, $anggotaIds);
         $result['tags'] = $this->getTags($id);
+        $result['anggota'] = $this->getAnggota($id);
         
         $kategori = $this->getKategori($result['id_kategori']);
         $result['kategori'] = $kategori ?: ['id' => $result['id_kategori'], 'name' => null];

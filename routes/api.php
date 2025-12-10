@@ -12,6 +12,7 @@ use App\Controllers\BeritaController;
 use App\Controllers\ProjectController;
 use App\Controllers\RatingController;
 use App\Controllers\UserController;
+use App\Controllers\AnggotaController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
@@ -69,3 +70,10 @@ $router->get('/rating/{id}', [RatingController::class, 'show']);
 $router->post('/rating', [RatingController::class, 'store']);
 $router->put('/rating/{id}', [RatingController::class, 'update']);
 $router->delete('/rating/{id}', [RatingController::class, 'destroy']);
+
+$router->get('/anggota', [AnggotaController::class, 'index']);
+$router->get('/anggota/{id}', [AnggotaController::class, 'show']);
+$router->post('/anggota', [AnggotaController::class, 'store']);
+$router->put('/anggota/{id}', [AnggotaController::class, 'update']);
+$router->post('/anggota/{id}', [AnggotaController::class, 'update']);
+$router->delete('/anggota/{id}', [AnggotaController::class, 'destroy']);

@@ -10,6 +10,7 @@ use App\Http\FileUploadHelper;
 use App\Middleware\AuthMiddleware;
 use App\Models\Project;
 use App\Models\Tag;
+use App\Models\Anggota;
 use Config\Database;
 use InvalidArgumentException;
 use OpenApi\Attributes as OA;
@@ -20,12 +21,14 @@ class ProjectController
 {
     private Project $project;
     private Tag $tag;
+    private Anggota $anggota;
 
     public function __construct()
     {
         $connection = (new Database())->getConnection();
         $this->project = new Project($connection);
         $this->tag = new Tag($connection);
+        $this->anggota = new Anggota($connection);
     }
 
     #[OA\Get(
@@ -270,6 +273,15 @@ class ProjectController
                 }
             }
 
+            $anggotaIds = [];
+            if (isset($formData['id_anggota'])) {
+                if (is_array($formData['id_anggota'])) {
+                    $anggotaIds = array_map('intval', $formData['id_anggota']);
+                } elseif (is_string($formData['id_anggota'])) {
+                    $anggotaIds = array_map('intval', explode(',', $formData['id_anggota']));
+                }
+            }
+
             if ($name === '') {
                 Response::json(['message' => 'Kolom name wajib diisi.'], 422);
                 return;
@@ -293,6 +305,12 @@ class ProjectController
             $invalidTagIds = $this->validateTagIds($tagIds);
             if (!empty($invalidTagIds)) {
                 Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
+                return;
+            }
+
+            $invalidAnggotaIds = $this->validateAnggotaIds($anggotaIds);
+            if (!empty($invalidAnggotaIds)) {
+                Response::json(['message' => 'Anggota dengan id berikut tidak ditemukan: ' . implode(', ', $invalidAnggotaIds)], 422);
                 return;
             }
 
@@ -358,7 +376,8 @@ class ProjectController
                     $videoUrl,
                     $imageUrls,
                     $status,
-                    $tagIds
+                    $tagIds,
+                    $anggotaIds
                 );
             } catch (PDOException $exception) {
                 foreach ($imageUrls as $imageUrl) {
@@ -390,9 +409,17 @@ class ProjectController
             return;
         }
 
+        $anggotaIds = $data['id_anggota'] ?? [];
+
         $invalidTagIds = $this->validateTagIds($tagIds);
         if (!empty($invalidTagIds)) {
             Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
+            return;
+        }
+
+        $invalidAnggotaIds = $this->validateAnggotaIds($anggotaIds);
+        if (!empty($invalidAnggotaIds)) {
+            Response::json(['message' => 'Anggota dengan id berikut tidak ditemukan: ' . implode(', ', $invalidAnggotaIds)], 422);
             return;
         }
 
@@ -412,7 +439,8 @@ class ProjectController
                 $videoUrl,
                 $imageUrls,
                 $data['status'] ?? 'on_progress',
-                $tagIds
+                $tagIds,
+                $anggotaIds
             );
         } catch (PDOException $ex) {
             Response::json(['message' => 'Gagal membuat entri proyek', 'error' => $ex->getMessage()], 500);
@@ -532,6 +560,15 @@ class ProjectController
                 }
             }
 
+            $anggotaIds = [];
+            if (isset($formData['id_anggota'])) {
+                if (is_array($formData['id_anggota'])) {
+                    $anggotaIds = array_map('intval', $formData['id_anggota']);
+                } elseif (is_string($formData['id_anggota'])) {
+                    $anggotaIds = array_map('intval', explode(',', $formData['id_anggota']));
+                }
+            }
+
             if (empty($tagIds)) {
                 Response::json(['message' => 'Kolom tag_ids wajib diisi dan harus berupa array tag id.'], 422);
                 return;
@@ -540,6 +577,12 @@ class ProjectController
             $invalidTagIds = $this->validateTagIds($tagIds);
             if (!empty($invalidTagIds)) {
                 Response::json(['message' => 'Tag dengan id berikut tidak ditemukan: ' . implode(', ', $invalidTagIds)], 422);
+                return;
+            }
+
+            $invalidAnggotaIds = $this->validateAnggotaIds($anggotaIds);
+            if (!empty($invalidAnggotaIds)) {
+                Response::json(['message' => 'Anggota dengan id berikut tidak ditemukan: ' . implode(', ', $invalidAnggotaIds)], 422);
                 return;
             }
 
@@ -624,7 +667,8 @@ class ProjectController
                     $videoUrl,
                     $imageUrls,
                     $status,
-                    $tagIds
+                    $tagIds,
+                    $anggotaIds
                 );
             } catch (PDOException $exception) {
                 foreach ($newImageUrls as $imageUrl) {
@@ -705,6 +749,14 @@ class ProjectController
                 }
             }
             
+            $anggotaIds = $data['id_anggota'] ?? [];
+
+            $invalidAnggotaIds = $this->validateAnggotaIds($anggotaIds);
+            if (!empty($invalidAnggotaIds)) {
+                Response::json(['message' => 'Anggota dengan id berikut tidak ditemukan: ' . implode(', ', $invalidAnggotaIds)], 422);
+                return;
+            }
+
             $entry = $this->project->update(
                 $id,
                 $data['name'] ?? $existing['name'],
@@ -713,7 +765,8 @@ class ProjectController
                 $videoUrl ?: null,
                 $imageUrls,
                 $data['status'] ?? $existing['status'],
-                $tagIds
+                $tagIds,
+                $anggotaIds
             );
         } catch (PDOException $ex) {
             Response::json(['message' => 'Gagal memperbarui entri proyek', 'error' => $ex->getMessage()], 500);
@@ -798,6 +851,13 @@ class ProjectController
             }
         }
 
+        $anggotaIds = [];
+        if (isset($payload['id_anggota'])) {
+            if (is_array($payload['id_anggota'])) {
+                $anggotaIds = array_map('intval', $payload['id_anggota']);
+            }
+        }
+
         $status = $payload['status'] ?? 'on_progress';
         if (!in_array($status, ['on_progress', 'completed'], true)) {
             throw new InvalidArgumentException('Status harus "on_progress" atau "completed".');
@@ -812,6 +872,7 @@ class ProjectController
             'image_url'  => $payload['image_url'] ?? [],
             'status'     => $status,
             'tag_ids'    => $tagIds,
+            'id_anggota' => $anggotaIds,
         ];
     }
 
@@ -825,5 +886,17 @@ class ProjectController
             }
         }
         return $invalidTagIds;
+    }
+
+    private function validateAnggotaIds(array $anggotaIds): array
+    {
+        $invalidAnggotaIds = [];
+        foreach ($anggotaIds as $anggotaId) {
+            $anggota = $this->anggota->find((int) $anggotaId);
+            if ($anggota === null) {
+                $invalidAnggotaIds[] = $anggotaId;
+            }
+        }
+        return $invalidAnggotaIds;
     }
 }
