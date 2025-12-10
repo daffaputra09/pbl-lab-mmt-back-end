@@ -468,4 +468,107 @@ class Project
 
         return $row;
     }
+
+    private function parseMediaSocialArray(?string $pgArray): ?array
+    {
+        if ($pgArray === null || $pgArray === '') {
+            return null;
+        }
+        
+        // Remove curly braces
+        $pgArray = trim($pgArray, '{}');
+        
+        if ($pgArray === '') {
+            return [];
+        }
+        
+        // Split by comma, but handle quoted JSON strings
+        $result = [];
+        $current = '';
+        $inQuotes = false;
+        
+        for ($i = 0; $i < strlen($pgArray); $i++) {
+            $char = $pgArray[$i];
+            
+            if ($char === '"' && ($i === 0 || $pgArray[$i - 1] !== '\\')) {
+                $inQuotes = !$inQuotes;
+            } elseif ($char === ',' && !$inQuotes) {
+                if ($current !== '') {
+                    $jsonString = $this->unescapeString($current);
+                    $decoded = json_decode($jsonString, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $result[] = $decoded;
+                    } else {
+                        // Fallback: treat as simple string (backward compatibility)
+                        $result[] = ['url' => $jsonString, 'type' => 'other'];
+                    }
+                    $current = '';
+                }
+            } else {
+                $current .= $char;
+            }
+        }
+        
+        if ($current !== '') {
+            $jsonString = $this->unescapeString($current);
+            $decoded = json_decode($jsonString, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $result[] = $decoded;
+            } else {
+                // Fallback: treat as simple string (backward compatibility)
+                $result[] = ['url' => $jsonString, 'type' => 'other'];
+            }
+        }
+        
+        return $result;
+    }
+
+    private function parsePostgresArray(?string $pgArray): ?array
+    {
+        if ($pgArray === null || $pgArray === '') {
+            return null;
+        }
+        
+        // Remove curly braces
+        $pgArray = trim($pgArray, '{}');
+        
+        if ($pgArray === '') {
+            return [];
+        }
+        
+        // Split by comma, but handle quoted strings
+        $result = [];
+        $current = '';
+        $inQuotes = false;
+        
+        for ($i = 0; $i < strlen($pgArray); $i++) {
+            $char = $pgArray[$i];
+            
+            if ($char === '"' && ($i === 0 || $pgArray[$i - 1] !== '\\')) {
+                $inQuotes = !$inQuotes;
+            } elseif ($char === ',' && !$inQuotes) {
+                if ($current !== '') {
+                    $result[] = $this->unescapeString($current);
+                    $current = '';
+                }
+            } else {
+                $current .= $char;
+            }
+        }
+        
+        if ($current !== '') {
+            $result[] = $this->unescapeString($current);
+        }
+        
+        return $result;
+    }
+
+    private function unescapeString(string $str): string
+    {
+        // Remove surrounding quotes if present
+        $str = trim($str, '"');
+        // Unescape escaped quotes
+        $str = str_replace('\\"', '"', $str);
+        return $str;
+    }
 }
