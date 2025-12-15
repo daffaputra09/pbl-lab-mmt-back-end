@@ -13,6 +13,9 @@ use App\Controllers\ProjectController;
 use App\Controllers\RatingController;
 use App\Controllers\UserController;
 use App\Controllers\AnggotaController;
+use App\Controllers\ProfileLabController;
+use App\Controllers\StatsController;
+use App\Controllers\DashboardController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
@@ -77,3 +80,12 @@ $router->post('/anggota', [AnggotaController::class, 'store']);
 $router->put('/anggota/{id}', [AnggotaController::class, 'update']);
 $router->post('/anggota/{id}', [AnggotaController::class, 'update']);
 $router->delete('/anggota/{id}', [AnggotaController::class, 'destroy']);
+
+$router->get('/profile-lab', [ProfileLabController::class, 'show']);
+$router->post('/profile-lab', [ProfileLabController::class, 'store']);
+$router->put('/profile-lab/{id}', [ProfileLabController::class, 'update']);
+$router->delete('/profile-lab/{id}', [ProfileLabController::class, 'destroy']);
+
+$router->get('/stats', [StatsController::class, 'index']);
+
+$router->get('/dashboard', [DashboardController::class, 'index']);

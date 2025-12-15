@@ -104,6 +104,15 @@ CREATE TABLE project_anggota (
     FOREIGN KEY (id_anggota) REFERENCES anggota(id) ON DELETE CASCADE
 );
 
+-- Table: Profile Lab
+CREATE TABLE profile_lab (
+    id SERIAL PRIMARY KEY,
+    misi TEXT[] NOT NULL,
+    visi TEXT NOT NULL,
+    sejarah TEXT NOT NULL,
+    nilai_inti TEXT NOT NULL
+);
+
 -- Create indexes 
 CREATE INDEX idx_project_kategori ON project(id_kategori);
 CREATE INDEX idx_rating_project ON rating(id_project);

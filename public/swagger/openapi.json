@@ -612,6 +612,30 @@
                 ]
             }
         },
+        "/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Mendapatkan data lengkap untuk dashboard admin (statistik, data terkini, dan data chart)",
+                "operationId": "e43b85d67a548a99f277c6a109b435a2",
+                "responses": {
+                    "200": {
+                        "description": "Data dashboard berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DashboardResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data dashboard"
+                    }
+                }
+            }
+        },
         "/docs": {
             "get": {
                 "tags": [
@@ -1540,6 +1564,180 @@
                 ]
             }
         },
+        "/profile-lab": {
+            "get": {
+                "tags": [
+                    "Profile Lab"
+                ],
+                "summary": "Mendapatkan informasi profile lab",
+                "operationId": "78315c5c6b6bd8a374ed4587a064272b",
+                "responses": {
+                    "200": {
+                        "description": "Data informasi tentang lab",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileLab"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Profile Lab"
+                ],
+                "summary": "Membuat atau mengupdate data informasi profile lab (requires authentication). Jika belum ada data, akan membuat data baru. Jika sudah ada, akan mengupdate data yang ada.",
+                "operationId": "79bb3b19668613efacb2a5ea10a0f563",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileLabCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Data profile lab berhasil dibuat (data baru)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileLab"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Data profile lab berhasil diupdate (data sudah ada)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileLab"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Data tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat atau mengupdate data profile lab"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/profile-lab/{id}": {
+            "put": {
+                "tags": [
+                    "Profile Lab"
+                ],
+                "summary": "Mengupdate data informasi profile lab (requires authentication)",
+                "operationId": "c99866dddf71080838491ca1eb75e95c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileLabUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data profile lab berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileLab"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Data tidak valid"
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengupdate data tentang lab"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Profile Lab"
+                ],
+                "summary": "Menghapus data informasi profile lab (requires authentication)",
+                "operationId": "2e8a099d2ed9bdfafbac05491cc1c530",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Data profile lab berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Data tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal menghapus data tentang lab"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/project": {
             "get": {
                 "tags": [
@@ -2054,6 +2252,30 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/stats": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Mendapatkan jumlah data statistik (project, gallery, berita, event)",
+                "operationId": "a4c985a2812bd2b1212dd3d30881c5ba",
+                "responses": {
+                    "200": {
+                        "description": "Data statistik berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data statistik"
+                    }
+                }
             }
         },
         "/tag": {
@@ -2752,6 +2974,305 @@
                 },
                 "type": "object"
             },
+            "DashboardResponse": {
+                "required": [
+                    "summary",
+                    "average_rating",
+                    "recent",
+                    "charts"
+                ],
+                "properties": {
+                    "summary": {
+                        "description": "Ringkasan statistik total data",
+                        "properties": {
+                            "project": {
+                                "type": "integer",
+                                "example": 15
+                            },
+                            "gallery": {
+                                "type": "integer",
+                                "example": 42
+                            },
+                            "berita": {
+                                "type": "integer",
+                                "example": 28
+                            },
+                            "event": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "rating": {
+                                "type": "integer",
+                                "example": 35
+                            },
+                            "anggota": {
+                                "type": "integer",
+                                "example": 8
+                            },
+                            "kategori": {
+                                "type": "integer",
+                                "example": 5
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "average_rating": {
+                        "description": "Rata-rata rating dari semua rating",
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.5,
+                        "nullable": true
+                    },
+                    "recent": {
+                        "description": "Data terkini (5 terbaru)",
+                        "properties": {
+                            "projects": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "berita": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "events": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "tanggal_event": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "gallery": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "tanggal_kegiatan": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "nullable": true
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "ratings": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "id_project": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "rating": {
+                                            "type": "integer"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "charts": {
+                        "description": "Data untuk chart (recharts)",
+                        "properties": {
+                            "project_by_status": {
+                                "description": "Data untuk Pie/Bar chart: Project berdasarkan status",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "on_progress"
+                                        },
+                                        "value": {
+                                            "type": "integer",
+                                            "example": 10
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "berita_by_status": {
+                                "description": "Data untuk Pie chart: Berita berdasarkan status",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "published"
+                                        },
+                                        "value": {
+                                            "type": "integer",
+                                            "example": 25
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "event_by_status": {
+                                "description": "Data untuk Pie chart: Event berdasarkan status (akan_datang, terlewat, tidak_ditentukan)",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "akan_datang"
+                                        },
+                                        "value": {
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "gallery_by_type": {
+                                "description": "Data untuk Pie chart: Gallery berdasarkan type (foto, video, lottie)",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "foto"
+                                        },
+                                        "value": {
+                                            "type": "integer",
+                                            "example": 30
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "project_by_kategori": {
+                                "description": "Data untuk Bar/Pie chart: Project berdasarkan kategori",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Web Development"
+                                        },
+                                        "value": {
+                                            "type": "integer",
+                                            "example": 8
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "rating_distribution": {
+                                "description": "Data untuk Bar chart: Distribusi rating (1-5 stars)",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "value": {
+                                            "type": "integer",
+                                            "example": 20
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "activity_timeline": {
+                                "description": "Data untuk Line/Area chart: Timeline aktivitas 12 bulan terakhir",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "month": {
+                                            "type": "string",
+                                            "example": "2024-01"
+                                        },
+                                        "project": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "berita": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "event": {
+                                            "type": "integer",
+                                            "example": 2
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "Event": {
                 "properties": {
                     "id": {
@@ -3110,6 +3631,115 @@
                         },
                         "type": "object",
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ProfileLab": {
+                "required": [
+                    "id",
+                    "misi",
+                    "visi",
+                    "sejarah",
+                    "nilai_inti"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "misi": {
+                        "description": "Array of mission statements",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Menyelenggarakan pendidikan praktikum dan penelitian yang berkualitas di bidang aplikasi teknologi Immersive, mobile, multimedia, serta teknologi interaktif.",
+                            "Mengembangkan riset dan inovasi berbasis mobile computing, multimedia, VR/AR, dan sensor interaktif untuk mendukung kemajuan ilmu pengetahuan dan teknologi",
+                            "Menyediakan fasilitas laboratorium yang modern dan relevan dengan perkembangan industri agar mahasiswa dapat menguasai keterampilan yang aplikatif"
+                        ]
+                    },
+                    "visi": {
+                        "type": "string",
+                        "example": "Memposisikan Lab Multimedia & Game sebagai pusat keunggulan yang responsif terhadap kebutuhan industri dan pendidikan tinggi."
+                    },
+                    "sejarah": {
+                        "type": "string",
+                        "example": "Laboratorium Multimedia dan Perangkat Bergerak merupakan salah satu laboratorium unggulan di Jurusan Teknologi Informasi yang berfokus pada riset, pengembangan, serta implementasi teknologi mobile computing dan multimedia interaktif."
+                    },
+                    "nilai_inti": {
+                        "type": "string",
+                        "example": "Membangun ekosistem pembelajaran yang mendukung pertumbuhan talenta digital."
+                    }
+                },
+                "type": "object"
+            },
+            "ProfileLabCreateRequest": {
+                "required": [
+                    "misi",
+                    "visi",
+                    "sejarah",
+                    "nilai_inti"
+                ],
+                "properties": {
+                    "misi": {
+                        "description": "Array of mission statements (minimal 1 item)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Menyelenggarakan pendidikan praktikum dan penelitian yang berkualitas di bidang aplikasi teknologi Immersive, mobile, multimedia, serta teknologi interaktif.",
+                            "Mengembangkan riset dan inovasi berbasis mobile computing, multimedia, VR/AR, dan sensor interaktif untuk mendukung kemajuan ilmu pengetahuan dan teknologi"
+                        ]
+                    },
+                    "visi": {
+                        "type": "string",
+                        "example": "Memposisikan Lab Multimedia & Game sebagai pusat keunggulan yang responsif terhadap kebutuhan industri dan pendidikan tinggi."
+                    },
+                    "sejarah": {
+                        "type": "string",
+                        "example": "Laboratorium Multimedia dan Perangkat Bergerak merupakan salah satu laboratorium unggulan di Jurusan Teknologi Informasi yang berfokus pada riset, pengembangan, serta implementasi teknologi mobile computing dan multimedia interaktif."
+                    },
+                    "nilai_inti": {
+                        "type": "string",
+                        "example": "Membangun ekosistem pembelajaran yang mendukung pertumbuhan talenta digital."
+                    }
+                },
+                "type": "object"
+            },
+            "ProfileLabUpdateRequest": {
+                "required": [
+                    "misi",
+                    "visi",
+                    "sejarah",
+                    "nilai_inti"
+                ],
+                "properties": {
+                    "misi": {
+                        "description": "Array of mission statements (minimal 1 item)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Menyelenggarakan pendidikan praktikum dan penelitian yang berkualitas di bidang aplikasi teknologi Immersive, mobile, multimedia, serta teknologi interaktif.",
+                            "Mengembangkan riset dan inovasi berbasis mobile computing, multimedia, VR/AR, dan sensor interaktif untuk mendukung kemajuan ilmu pengetahuan dan teknologi"
+                        ]
+                    },
+                    "visi": {
+                        "type": "string",
+                        "example": "Memposisikan Lab Multimedia & Game sebagai pusat keunggulan yang responsif terhadap kebutuhan industri dan pendidikan tinggi."
+                    },
+                    "sejarah": {
+                        "type": "string",
+                        "example": "Laboratorium Multimedia dan Perangkat Bergerak merupakan salah satu laboratorium unggulan di Jurusan Teknologi Informasi yang berfokus pada riset, pengembangan, serta implementasi teknologi mobile computing dan multimedia interaktif."
+                    },
+                    "nilai_inti": {
+                        "type": "string",
+                        "example": "Membangun ekosistem pembelajaran yang mendukung pertumbuhan talenta digital."
                     }
                 },
                 "type": "object"
@@ -3532,6 +4162,41 @@
                 },
                 "type": "object"
             },
+            "StatsResponse": {
+                "required": [
+                    "project",
+                    "gallery",
+                    "berita",
+                    "event"
+                ],
+                "properties": {
+                    "project": {
+                        "description": "Jumlah total data project",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 15
+                    },
+                    "gallery": {
+                        "description": "Jumlah total data gallery",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 42
+                    },
+                    "berita": {
+                        "description": "Jumlah total data berita",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 28
+                    },
+                    "event": {
+                        "description": "Jumlah total data event",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 10
+                    }
+                },
+                "type": "object"
+            },
             "Tag": {
                 "required": [
                     "id",
@@ -3716,6 +4381,9 @@
             "name": "Berita"
         },
         {
+            "name": "Dashboard"
+        },
+        {
             "name": "Event"
         },
         {
@@ -3725,10 +4393,16 @@
             "name": "Kategori"
         },
         {
+            "name": "Profile Lab"
+        },
+        {
             "name": "Project"
         },
         {
             "name": "Rating"
+        },
+        {
+            "name": "Statistics"
         },
         {
             "name": "Tag"
