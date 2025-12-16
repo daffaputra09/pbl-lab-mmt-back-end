@@ -25,7 +25,7 @@ class Anggota
             $params['search'] = "%{$search}%";
         }
         
-        $query .= ' ORDER BY nama';
+        $query .= ' ORDER BY id ASC';
         
         if (!empty($params)) {
             $stmt = $this->db->prepare($query);
@@ -51,7 +51,7 @@ class Anggota
             $params['search'] = "%{$search}%";
         }
         
-        $query .= ' ORDER BY nama LIMIT :limit OFFSET :offset';
+        $query .= ' ORDER BY id ASC LIMIT :limit OFFSET :offset';
         $params['limit'] = $limit;
         $params['offset'] = $offset;
         

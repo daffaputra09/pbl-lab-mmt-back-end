@@ -24,7 +24,7 @@ class PartnerLab
             $params['search'] = "%{$search}%";
         }
         
-        $query .= ' ORDER BY created_at DESC';
+        $query .= ' ORDER BY id ASC';
         
         if (!empty($params)) {
             $stmt = $this->db->prepare($query);
@@ -49,7 +49,7 @@ class PartnerLab
             $params['search'] = "%{$search}%";
         }
         
-        $query .= ' ORDER BY created_at DESC LIMIT :limit OFFSET :offset';
+        $query .= ' ORDER BY id ASC LIMIT :limit OFFSET :offset';
         
         $stmt = $this->db->prepare($query);
         
