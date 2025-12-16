@@ -113,6 +113,15 @@ CREATE TABLE profile_lab (
     nilai_inti TEXT NOT NULL
 );
 
+-- Table: Partner Lab
+CREATE TABLE partner_lab (
+    id SERIAL PRIMARY KEY,
+    nama TEXT NOT NULL,
+    deskripsi TEXT,
+    image_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes 
 CREATE INDEX idx_project_kategori ON project(id_kategori);
 CREATE INDEX idx_rating_project ON rating(id_project);

@@ -16,6 +16,7 @@ use App\Controllers\AnggotaController;
 use App\Controllers\ProfileLabController;
 use App\Controllers\StatsController;
 use App\Controllers\DashboardController;
+use App\Controllers\PartnerLabController;
 
 $router->get('/', [DocsController::class, 'ui']);
 $router->get('/docs', [DocsController::class, 'ui']);
@@ -89,3 +90,10 @@ $router->delete('/profile-lab/{id}', [ProfileLabController::class, 'destroy']);
 $router->get('/stats', [StatsController::class, 'index']);
 
 $router->get('/dashboard', [DashboardController::class, 'index']);
+
+$router->get('/partner-lab', [PartnerLabController::class, 'index']);
+$router->get('/partner-lab/{id}', [PartnerLabController::class, 'show']);
+$router->post('/partner-lab', [PartnerLabController::class, 'store']);
+$router->put('/partner-lab/{id}', [PartnerLabController::class, 'update']);
+$router->post('/partner-lab/{id}', [PartnerLabController::class, 'update']);
+$router->delete('/partner-lab/{id}', [PartnerLabController::class, 'destroy']);

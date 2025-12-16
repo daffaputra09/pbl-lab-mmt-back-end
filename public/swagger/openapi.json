@@ -1564,6 +1564,287 @@
                 ]
             }
         },
+        "/partner-lab": {
+            "get": {
+                "tags": [
+                    "Partner Lab"
+                ],
+                "summary": "List semua partner lab dengan pagination",
+                "operationId": "b5ed24c0159d7353c3a7efdca6a3e85e",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman (default: 1, hanya digunakan jika limit diisi)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah item per halaman. Jika tidak diisi, akan mengembalikan semua data.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search partner lab berdasarkan nama atau deskripsi (case-insensitive, partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Partner"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar partner lab dengan pagination",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PartnerLabPaginatedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parameter tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data partner lab"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Partner Lab"
+                ],
+                "summary": "Buat partner lab baru (requires authentication)",
+                "operationId": "177449b23015b5714da9e16580fd88d7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PartnerLabCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Partner lab berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PartnerLab"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Nama wajib diisi"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal membuat partner lab"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/partner-lab/{id}": {
+            "get": {
+                "tags": [
+                    "Partner Lab"
+                ],
+                "summary": "Detail partner lab",
+                "operationId": "0b91cf11e112d90b6992cf89c537fe5c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail partner lab",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PartnerLab"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partner lab tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Partner Lab"
+                ],
+                "summary": "Perbarui partner lab (requires authentication)",
+                "operationId": "a0e1ba76625d6b12028665c238af729a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PartnerLabUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Partner lab berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PartnerLab"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partner lab tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Partner Lab"
+                ],
+                "summary": "Perbarui partner lab (dengan upload gambar, requires authentication)",
+                "operationId": "db3831625cebcb75c19bdf5345fd8e75",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PartnerLabUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Partner lab berhasil diperbarui",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PartnerLab"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partner lab tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Partner Lab"
+                ],
+                "summary": "Hapus partner lab (requires authentication)",
+                "operationId": "19d84986d430606d621590fbd98fa545",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Partner lab berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Partner lab tidak ditemukan"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid"
+                    },
+                    "500": {
+                        "description": "Gagal menghapus partner lab"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/profile-lab": {
             "get": {
                 "tags": [
@@ -3635,6 +3916,137 @@
                 },
                 "type": "object"
             },
+            "PartnerLab": {
+                "required": [
+                    "id",
+                    "nama"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "PT. Teknologi Indonesia"
+                    },
+                    "deskripsi": {
+                        "type": "string",
+                        "example": "Perusahaan teknologi terkemuka di Indonesia",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "/uploads/partner-lab/logo_6546f7a8e1234_1699012345.png",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-15T10:30:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "PartnerLabCreateRequest": {
+                "required": [
+                    "nama"
+                ],
+                "properties": {
+                    "nama": {
+                        "description": "Nama partner lab",
+                        "type": "string",
+                        "example": "PT. Teknologi Indonesia"
+                    },
+                    "deskripsi": {
+                        "description": "Deskripsi partner lab",
+                        "type": "string",
+                        "example": "Perusahaan teknologi terkemuka di Indonesia",
+                        "nullable": true
+                    },
+                    "image": {
+                        "description": "Gambar logo partner (JPG, PNG, GIF, WEBP, max 100MB). Wajib diisi untuk flow upload file.",
+                        "type": "string",
+                        "format": "binary",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PartnerLabUpdateRequest": {
+                "properties": {
+                    "nama": {
+                        "description": "Nama partner lab",
+                        "type": "string",
+                        "example": "PT. Teknologi Indonesia"
+                    },
+                    "deskripsi": {
+                        "description": "Deskripsi partner lab",
+                        "type": "string",
+                        "example": "Perusahaan teknologi terkemuka di Indonesia",
+                        "nullable": true
+                    },
+                    "image": {
+                        "description": "Gambar logo partner (JPG, PNG, GIF, WEBP, max 100MB). Opsional - kirim hanya jika ingin mengubah gambar. Untuk multipart/form-data.",
+                        "type": "string",
+                        "format": "binary",
+                        "nullable": true
+                    },
+                    "image_url": {
+                        "description": "URL gambar yang sudah ada. Untuk JSON request.",
+                        "type": "string",
+                        "example": "/uploads/partner-lab/logo_6546f7a8e1234_1699012345.png",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PartnerLabPaginatedResponse": {
+                "required": [
+                    "data"
+                ],
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PartnerLab"
+                        }
+                    },
+                    "pagination": {
+                        "description": "Informasi pagination. Null jika limit tidak diisi (mengembalikan semua data)",
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 20
+                            },
+                            "total_pages": {
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "has_next": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "has_prev": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "ProfileLab": {
                 "required": [
                     "id",
@@ -4391,6 +4803,9 @@
         },
         {
             "name": "Kategori"
+        },
+        {
+            "name": "Partner Lab"
         },
         {
             "name": "Profile Lab"
